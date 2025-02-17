@@ -150,13 +150,14 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
             },
             onError: (event: any) => {
               const errors: Record<number, string> = {
-                2: "Invalid video ID",
-                5: "HTML5 player error",
-                100: "Video not found",
-                101: "Embedded playback not allowed",
-                150: "Embedded playback not allowed",
+                2: "This video ID is invalid. Please check the video ID and try again.",
+                5: "HTML5 player error. Please try refreshing the page.",
+                100: "This video was not found or has been removed from YouTube.",
+                101: "This video cannot be played in an embedded player.",
+                150: "This video cannot be played in an embedded player.",
               };
-              setPlayerError(errors[event.data] || "An error occurred playing the video");
+              setPlayerError(errors[event.data] || "An error occurred while playing the video. Please try again.");
+              console.error("YouTube player error:", event.data);
             },
           },
         });

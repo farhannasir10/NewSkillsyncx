@@ -22,9 +22,10 @@ declare global {
 let apiLoaded = false;
 
 export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const [generatedNotes, setGeneratedNotes] = useState<string>("");
+  const [playerError, setPlayerError] = useState<string>("");
   const { toast } = useToast();
 
   const completeMutation = useMutation({
@@ -45,19 +46,24 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
 
   const generateNotesMutation = useMutation({
     mutationFn: async () => {
-      // For demo purposes, we'll use a mock transcript
-      const mockTranscript = `This comprehensive video covers key concepts in React development including:
-      1. Component Architecture
-      2. State Management with React Query
-      3. Form Handling with React Hook Form
-      4. Authentication Patterns
-      5. API Integration Best Practices
-      We discuss real-world implementation examples and common pitfalls to avoid.`;
+      // Generate different mock transcripts based on videoId to demonstrate unique content
+      const mockTranscripts: { [key: string]: string } = {
+        default: `This video covers key concepts including component architecture, state management, and API integration.`,
+      };
+
+      // Add the videoId to the transcript to make it unique
+      const baseTranscript = mockTranscripts[videoId] || mockTranscripts.default;
+      const uniqueTranscript = `Video ${videoId}: ${baseTranscript}
+        Topics covered in this specific video:
+        1. Implementation details and best practices
+        2. Performance optimization techniques
+        3. Common pitfalls to avoid
+        Current video-specific examples and demonstrations.`;
 
       const res = await fetch("/api/notes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript: mockTranscript }),
+        body: JSON.stringify({ transcript: uniqueTranscript }),
         credentials: "include",
       });
 
@@ -77,7 +83,6 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
       });
     },
     onError: (error: Error) => {
-      // Check if the error includes quota exceeded message
       if (error.message.includes("quota exceeded")) {
         toast({
           title: "Using Basic Notes",
@@ -97,46 +102,75 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
   useEffect(() => {
     let isMounted = true;
 
-    if (!apiLoaded) {
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      const firstScriptTag = document.getElementsByTagName("script")[0];
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-      apiLoaded = true;
+    const loadYouTubeAPI = () => {
+      if (!apiLoaded) {
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName("script")[0];
+        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+        apiLoaded = true;
+      }
+    };
 
-      window.onYouTubeIframeAPIReady = () => {
-        if (isMounted) {
-          initPlayer();
-        }
-      };
-    } else {
-      initPlayer();
-    }
-
-    function initPlayer() {
+    const initPlayer = () => {
       if (playerRef.current) {
         playerRef.current.destroy();
         playerRef.current = null;
       }
 
-      if (containerRef.current && !playerRef.current && window.YT?.Player) {
-        playerRef.current = new window.YT.Player(containerRef.current, {
-          height: "400",
-          width: "100%",
-          videoId,
-          playerVars: {
-            playsinline: 1,
-          },
-          events: {
-            onStateChange: (event: any) => {
-              // Video ended
-              if (event.data === 0) {
-                completeMutation.mutate();
-              }
+      if (playerContainerRef.current && window.YT?.Player) {
+        try {
+          playerRef.current = new window.YT.Player(playerContainerRef.current, {
+            height: "400",
+            width: "100%",
+            videoId,
+            playerVars: {
+              playsinline: 1,
+              autoplay: 0,
+              modestbranding: 1,
+              rel: 0,
             },
-          },
-        });
+            events: {
+              onReady: () => {
+                setPlayerError("");
+              },
+              onError: (event: any) => {
+                const errorMessages: { [key: number]: string } = {
+                  2: "Invalid video ID or URL",
+                  5: "HTML5 player error",
+                  100: "Video not found",
+                  101: "Video playback not allowed",
+                  150: "Video playback not allowed",
+                };
+                const errorCode = event.data;
+                setPlayerError(errorMessages[errorCode] || "An error occurred while loading the video");
+              },
+              onStateChange: (event: any) => {
+                // Video ended
+                if (event.data === 0) {
+                  completeMutation.mutate();
+                }
+              },
+            },
+          });
+        } catch (error) {
+          console.error("Error initializing YouTube player:", error);
+          setPlayerError("Failed to initialize video player");
+        }
       }
+    };
+
+    loadYouTubeAPI();
+
+    window.onYouTubeIframeAPIReady = () => {
+      if (isMounted) {
+        initPlayer();
+      }
+    };
+
+    // If API is already loaded, initialize player directly
+    if (window.YT?.Player) {
+      initPlayer();
     }
 
     return () => {
@@ -155,7 +189,13 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div className="lg:col-span-2">
-        <div ref={containerRef} />
+        {playerError ? (
+          <div className="bg-destructive/10 text-destructive p-4 rounded-md">
+            {playerError}
+          </div>
+        ) : (
+          <div ref={playerContainerRef} />
+        )}
         <div className="mt-4 flex justify-end">
           <Button
             onClick={() => generateNotesMutation.mutate()}

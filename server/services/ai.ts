@@ -28,8 +28,17 @@ export async function generateVideoNotes(transcript: string): Promise<string> {
     return response.choices[0].message.content || "Failed to generate notes.";
   } catch (error) {
     console.error("AI notes generation failed:", error);
-    if (error instanceof Error && error.message.includes("API key")) {
-      throw new Error("Invalid or missing OpenAI API key. Please check your configuration.");
+    if (error instanceof Error) {
+      // Handle specific OpenAI API errors
+      if (error.message.includes("API key")) {
+        throw new Error("Invalid OpenAI API key. Please check your configuration.");
+      }
+      if (error.message.includes("quota")) {
+        throw new Error("AI service quota exceeded. Please try again later.");
+      }
+      if (error.message.includes("rate limit")) {
+        throw new Error("Too many requests. Please wait a moment and try again.");
+      }
     }
     throw new Error("Failed to generate notes. Please try again later.");
   }

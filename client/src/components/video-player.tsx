@@ -61,7 +61,11 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to generate notes");
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to generate notes");
+      }
+
       const data = await res.json();
       return data.notes;
     },
@@ -74,7 +78,7 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: "AI Service Error",
         description: error.message,
         variant: "destructive",
       });

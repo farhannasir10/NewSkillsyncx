@@ -1,0 +1,35 @@
+You're building a YouTube-based learning platform where users can access structured playlists, track progress, engage with a community, and monetize curated courses. You plan to target tech learners in India by offering a low-cost alternative to platforms like Udemy.
+
+🎯 Key Features of Your Platform
+✅ Core Learning Features
+Curated Playlists: Organize YouTube videos into structured courses.
+Progress Tracking: Users can see how much they’ve completed.
+User-Generated Playlists: Users can create and share their own courses.
+Leaderboard & XP System: Encourage learning through gamification.
+Course Reviews & Ratings: Allow users to leave feedback on courses.
+👤 User Profiles
+Display XP, badges, completed courses, progress, and leaderboard ranking.
+Users can follow each other and see shared playlists.
+💰 Monetization & Revenue Model
+Subscription Model: Charge ₹200-500/month for access to premium courses.
+Pay-Per-Course Option: Users can purchase high-value courses separately.
+User Earnings: Allow creators to sell their curated playlists and earn a cut.
+Affiliate Earnings: If a playlist includes paid courses, the creator gets a commission.
+🌍 Community & Social Features
+Discussions & Posts: Users can share insights, ask questions, and engage.
+Referral System: Invite 3 friends and get free access for a month.
+Streaks & Challenges: Daily learning challenges with rewards.
+🎮 Viral Features (For Growth)
+XP & Leaderboard: Users share their rank on social media for bragging rights.
+Badges & Achievements: Show off progress in a gamified way.
+AI-Based Recommendations: Suggest courses based on user activity.
+🔨 Tech Stack & Development Plan
+Frontend (React / Next.js)
+UI: Tailwind CSS / Chakra UI
+State Management: Redux / Context API
+Backend (NestJS / Express + PostgreSQL + Prisma)
+User Data, Course Progress, Payments, and Leaderboard stored in PostgreSQL.
+API: GraphQL / REST for fast data fetching.
+Payments & Monetization
+Stripe / Razorpay for subscription payments.
+Google Pay / UPI for quick transactions in India

@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import { generateVideoNotes } from "./services/ai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -55,6 +56,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     const user = await storage.getUser(req.user!.id);
     res.json({ progress, user });
+  });
+
+  app.post("/api/notes/generate", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { transcript } = req.body;
+      if (!transcript) {
+        return res.status(400).send("Transcript is required");
+      }
+
+      const notes = await generateVideoNotes(transcript);
+      res.json({ notes });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   });
 
   const httpServer = createServer(app);

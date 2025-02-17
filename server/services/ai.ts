@@ -47,41 +47,101 @@ The fundamental building blocks of React applications. Components are reusable p
 function Welcome({ name }) {
   return <h1>Hello, {name}!</h1>;
 }
+
+// Using the component
+function App() {
+  return (
+    <div>
+      <Welcome name="John" />
+      <Welcome name="Sarah" />
+    </div>
+  );
+}
 \`\`\`
 
 ### Props
 Props are read-only properties passed to components, enabling parent-to-child component communication.
 \`\`\`jsx
-// Parent Component
-<Welcome name="John" />
+// Component with multiple props
+function UserCard({ name, role, avatar }) {
+  return (
+    <div className="card">
+      <img src={avatar} alt={name} />
+      <h2>{name}</h2>
+      <p>{role}</p>
+    </div>
+  );
+}
+
+// Using props with default values
+function Button({ type = "primary", children }) {
+  return (
+    <button className={\`button-\${type}\`}>
+      {children}
+    </button>
+  );
+}
 \`\`\`
 
 ### State
 State represents mutable data in a component that can change over time. When state changes, React re-renders the component.
 \`\`\`jsx
-const [count, setCount] = useState(0);
-// Use setCount to update the state
+function Counter() {
+  // Basic state example
+  const [count, setCount] = useState(0);
+
+  // Multiple state variables
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      {isLoading && <p>Loading...</p>}
+      {error && <p>Error: {error}</p>}
+    </div>
+  );
+}
 \`\`\`
 
 ### Hooks
 Functions that let you use state and other React features in function components:
 - useState: Manage local state
-- useEffect: Handle side effects
+- useEffect: Handle side effects like data fetching
 - useContext: Access context data
 - useRef: Reference DOM elements
+- useMemo/useCallback: Performance optimization
 
 ## 2. State Management in React
 State management is crucial for handling data flow in React applications:
 
 ### Local Component State (useState)
-Used for component-specific data that doesn't need to be shared:
+For component-specific data that doesn't need to be shared:
 \`\`\`jsx
-function Counter() {
-  const [count, setCount] = useState(0);
+function TodoList() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, { id: Date.now(), text: input }]);
+      setInput('');
+    }
+  };
+
   return (
     <div>
-      <p>Count: {count}</p>
-      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <input 
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <button onClick={addTodo}>Add Todo</button>
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>{todo.text}</li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -90,58 +150,63 @@ function Counter() {
 ### Context API (useContext)
 For sharing state between components without prop drilling:
 \`\`\`jsx
-// Create context
+// Create theme context
 const ThemeContext = createContext('light');
 
-// Provider component
-function App() {
+// Provider component with state
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+
   return (
-    <ThemeContext.Provider value="dark">
-      <MainContent />
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
     </ThemeContext.Provider>
   );
 }
 
 // Consumer component
-function MainContent() {
-  const theme = useContext(ThemeContext);
-  return <div className={theme}>Content</div>;
+function ThemedButton() {
+  const { theme, setTheme } = useContext(ThemeContext);
+
+  return (
+    <button 
+      className={theme}
+      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+    >
+      Toggle Theme
+    </button>
+  );
 }
 \`\`\`
 
 ### State Management Libraries
 For complex applications, consider using:
-- Redux: Centralized state management
-- React Query: Server state management
-- Zustand: Simple state management
-- Jotai: Atomic state management
+1. **Redux**: 
+   - Centralized state management
+   - Great for large applications
+   - Strong dev tools and middleware support
 
-## 3. Form Handling
-Best practices for handling forms in React:
-- Controlled vs Uncontrolled components
-- Form validation techniques
-- Using form libraries like React Hook Form
+2. **React Query**:
+   - Perfect for server state management
+   - Built-in caching and invalidation
+   - Automatic background updates
 
-## 4. API Integration
-How to work with APIs in React:
-- Fetch vs Axios
-- Async/await patterns
-- Error handling
-- Loading states
+3. **Zustand**:
+   - Simple and lightweight
+   - No boilerplate required
+   - Great for small to medium apps
 
-## 5. Performance Optimization
-Key techniques for optimizing React apps:
-- Code splitting
-- Lazy loading
-- Memoization with useMemo and useCallback
-- Virtual DOM understanding
+4. **Jotai**:
+   - Atomic state management
+   - Works well with React Suspense
+   - Minimal API surface
 
 ## Additional Resources
 - React official documentation: https://reactjs.org
 - Community forums and Discord channels
 - Practice exercises recommended
 
-Note: AI-powered detailed notes are currently unavailable. These are basic structured notes with detailed explanations and examples.`;
+Note: These are structured notes with detailed explanations and examples to help you understand React concepts better.`;
       }
       if (error.message.includes("rate limit")) {
         throw new Error("Too many requests. Please wait a moment and try again.");

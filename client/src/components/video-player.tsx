@@ -22,8 +22,7 @@ declare global {
 let apiLoaded = false;
 
 export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
-  const playerContainerRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
   const [generatedNotes, setGeneratedNotes] = useState<string>("");
   const [playerError, setPlayerError] = useState<string>("");
   const { toast } = useToast();
@@ -46,24 +45,35 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
 
   const generateNotesMutation = useMutation({
     mutationFn: async () => {
-      // Generate different mock transcripts based on videoId to demonstrate unique content
+      // Create unique mock transcripts based on videoId
       const mockTranscripts: { [key: string]: string } = {
-        default: `This video covers key concepts including component architecture, state management, and API integration.`,
+        "video1": "Introduction to React Fundamentals covering components, props, and state management. This lecture focuses on building a strong foundation in React development.",
+        "video2": "Advanced State Management in React exploring Context API, Redux, and other state management solutions. Includes practical examples and best practices.",
+        "video3": "React Performance Optimization discussing key techniques like useMemo, useCallback, and React.memo. Learn how to identify and fix performance bottlenecks.",
+        "default": "This video covers essential development concepts and practical implementations. Topics include best practices, common patterns, and real-world examples."
       };
 
-      // Add the videoId to the transcript to make it unique
-      const baseTranscript = mockTranscripts[videoId] || mockTranscripts.default;
-      const uniqueTranscript = `Video ${videoId}: ${baseTranscript}
-        Topics covered in this specific video:
-        1. Implementation details and best practices
-        2. Performance optimization techniques
-        3. Common pitfalls to avoid
-        Current video-specific examples and demonstrations.`;
+      const transcript = `
+        ${mockTranscripts[videoId] || mockTranscripts.default}
+
+        Key Topics Covered:
+        1. Core concepts and fundamentals
+        2. Practical implementation examples
+        3. Best practices and patterns
+        4. Common challenges and solutions
+        5. Real-world use cases
+
+        Video ID: ${videoId}
+        Additional Resources:
+        - Code examples and documentation
+        - Practice exercises
+        - Related tutorials and guides
+      `;
 
       const res = await fetch("/api/notes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript: uniqueTranscript }),
+        body: JSON.stringify({ transcript }),
         credentials: "include",
       });
 
@@ -83,25 +93,15 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
       });
     },
     onError: (error: Error) => {
-      if (error.message.includes("quota exceeded")) {
-        toast({
-          title: "Using Basic Notes",
-          description: "AI service is temporarily unavailable. Showing basic structured notes instead.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "AI Service Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   useEffect(() => {
-    let isMounted = true;
-
     const loadYouTubeAPI = () => {
       if (!apiLoaded) {
         const tag = document.createElement("script");
@@ -112,77 +112,63 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
       }
     };
 
-    const initPlayer = () => {
-      if (playerRef.current) {
-        playerRef.current.destroy();
-        playerRef.current = null;
-      }
+    const createPlayer = () => {
+      if (!playerRef.current) return;
 
-      if (playerContainerRef.current && window.YT?.Player) {
-        try {
-          playerRef.current = new window.YT.Player(playerContainerRef.current, {
-            height: "400",
-            width: "100%",
-            videoId,
-            playerVars: {
-              playsinline: 1,
-              autoplay: 0,
-              modestbranding: 1,
-              rel: 0,
+      try {
+        return new window.YT.Player(playerRef.current, {
+          videoId,
+          height: "400",
+          width: "100%",
+          playerVars: {
+            autoplay: 0,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
+          },
+          events: {
+            onStateChange: (event: any) => {
+              if (event.data === window.YT.PlayerState.ENDED) {
+                completeMutation.mutate();
+              }
             },
-            events: {
-              onReady: () => {
-                setPlayerError("");
-              },
-              onError: (event: any) => {
-                const errorMessages: { [key: number]: string } = {
-                  2: "Invalid video ID or URL",
-                  5: "HTML5 player error",
-                  100: "Video not found",
-                  101: "Video playback not allowed",
-                  150: "Video playback not allowed",
-                };
-                const errorCode = event.data;
-                setPlayerError(errorMessages[errorCode] || "An error occurred while loading the video");
-              },
-              onStateChange: (event: any) => {
-                // Video ended
-                if (event.data === 0) {
-                  completeMutation.mutate();
-                }
-              },
+            onError: (event: any) => {
+              const errors: Record<number, string> = {
+                2: "Invalid video ID",
+                5: "HTML5 player error",
+                100: "Video not found",
+                101: "Embedded playback not allowed",
+                150: "Embedded playback not allowed",
+              };
+              setPlayerError(errors[event.data] || "An error occurred playing the video");
             },
-          });
-        } catch (error) {
-          console.error("Error initializing YouTube player:", error);
-          setPlayerError("Failed to initialize video player");
-        }
+            onReady: () => {
+              setPlayerError("");
+            },
+          },
+        });
+      } catch (error) {
+        console.error("Error creating YouTube player:", error);
+        setPlayerError("Failed to initialize video player");
+        return null;
       }
     };
 
-    loadYouTubeAPI();
-
-    window.onYouTubeIframeAPIReady = () => {
-      if (isMounted) {
-        initPlayer();
+    const initializePlayer = () => {
+      if (window.YT && window.YT.Player) {
+        createPlayer();
+      } else {
+        window.onYouTubeIframeAPIReady = () => {
+          createPlayer();
+        };
+        loadYouTubeAPI();
       }
     };
 
-    // If API is already loaded, initialize player directly
-    if (window.YT?.Player) {
-      initPlayer();
-    }
+    initializePlayer();
 
     return () => {
-      isMounted = false;
-      if (playerRef.current?.destroy) {
-        try {
-          playerRef.current.destroy();
-        } catch (e) {
-          console.error("Failed to destroy player:", e);
-        }
-        playerRef.current = null;
-      }
+      // Cleanup
     };
   }, [videoId]);
 
@@ -194,7 +180,9 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
             {playerError}
           </div>
         ) : (
-          <div ref={playerContainerRef} />
+          <div className="aspect-video">
+            <div ref={playerRef} className="w-full h-full" />
+          </div>
         )}
         <div className="mt-4 flex justify-end">
           <Button

@@ -21,6 +21,7 @@ const videoSchema = z.object({
 
 const createPlaylistSchema = insertPlaylistSchema.extend({
   videos: z.array(videoSchema).min(1, "At least one video is required"),
+  playlistUrl: z.string().url("Please enter a valid YouTube playlist URL"),
 });
 
 export default function AdminDashboard() {
@@ -32,6 +33,7 @@ export default function AdminDashboard() {
     defaultValues: {
       title: "",
       description: "",
+      playlistUrl: "",
       videos: [{ id: "", title: "", duration: "", thumbnail: "" }],
       tags: [],
     },
@@ -87,7 +89,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Create New Course</CardTitle>
@@ -119,6 +121,22 @@ export default function AdminDashboard() {
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="playlistUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>YouTube Playlist URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="https://www.youtube.com/playlist?list=..."
+                        />
                       </FormControl>
                     </FormItem>
                   )}

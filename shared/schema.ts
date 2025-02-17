@@ -17,6 +17,7 @@ export const playlists = pgTable("playlists", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   creatorId: integer("creator_id").notNull(),
+  playlistUrl: text("playlist_url").notNull(),
   videos: jsonb("videos").notNull().default([]),
   tags: text("tags").array().notNull().default([]),
 });
@@ -37,6 +38,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertPlaylistSchema = createInsertSchema(playlists).pick({
   title: true,
   description: true,
+  playlistUrl: true,
   videos: true,
   tags: true,
 });

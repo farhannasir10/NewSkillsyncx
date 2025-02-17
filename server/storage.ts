@@ -65,8 +65,8 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentIds.users++;
     const hashedPassword = await hashPassword(insertUser.password);
-    const user: User = { 
-      ...insertUser, 
+    const user: User = {
+      ...insertUser,
       id,
       password: hashedPassword,
       isAdmin: false,
@@ -138,6 +138,7 @@ export class MemStorage implements IStorage {
         title: "React Fundamentals",
         description: "Learn React from scratch with practical examples",
         creatorId: 1,
+        playlistUrl: "https://www.youtube.com/playlist?list=PLN3n1USn4xlntqksY83W3997mmQPrUmqM",
         videos: [
           { id: "w7ejDZ8SWv8", title: "React JS Crash Course", thumbnail: "", duration: "1:48:47" },
           { id: "4UZrsTqkcW4", title: "React Tutorial for Beginners", thumbnail: "", duration: "2:30:33" }
@@ -148,6 +149,7 @@ export class MemStorage implements IStorage {
         title: "Node.js Essentials",
         description: "Master backend development with Node.js",
         creatorId: 1,
+        playlistUrl: "https://www.youtube.com/playlist?list=PL4cUxeGkcC9jsz4LDYc6kv3ymONOKxwBU",
         videos: [
           { id: "Oe421EPjeBE", title: "Node.js and Express.js - Full Course", thumbnail: "", duration: "8:16:48" }
         ],

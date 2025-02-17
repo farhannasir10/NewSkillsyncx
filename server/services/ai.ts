@@ -15,11 +15,11 @@ export async function generateVideoNotes(transcript: string): Promise<string> {
       messages: [
         {
           role: "system",
-          content: "You are an expert at creating concise, well-structured educational notes. Format your response using markdown."
+          content: "You are an expert at creating detailed educational notes. For each key concept, provide a thorough explanation with examples. Format your response using markdown with proper headings, subheadings, and code examples where relevant."
         },
         {
           role: "user",
-          content: `Generate comprehensive study notes from this video transcript. Include key points, concepts, and examples:\n\n${transcript}`
+          content: `Generate comprehensive study notes from this video transcript. Include key points with detailed explanations and examples:\n\n${transcript}`
         }
       ],
       temperature: 0.7,
@@ -36,19 +36,46 @@ export async function generateVideoNotes(transcript: string): Promise<string> {
       if (error.message.includes("quota")) {
         // Return basic structured notes when AI is unavailable
         return `# Video Summary Notes
-## Key Points
-- Introduction to React development concepts
-- Understanding component architecture
-- State management principles
-- Form handling and validation
-- API integration techniques
+
+## 1. React Development Fundamentals
+React is a JavaScript library for building user interfaces. Here's what you need to know:
+- **Components**: Building blocks of React applications
+- **Props**: Pass data between components
+- **State**: Manage component data
+- **Hooks**: Functions that let you use state and other React features
+
+## 2. State Management
+Understanding how to manage state is crucial in React:
+- Use useState for local component state
+- Consider useContext for global state
+- Learn when to use external state management libraries
+
+## 3. Form Handling
+Best practices for handling forms in React:
+- Controlled vs Uncontrolled components
+- Form validation techniques
+- Using form libraries like React Hook Form
+
+## 4. API Integration
+How to work with APIs in React:
+- Fetch vs Axios
+- Async/await patterns
+- Error handling
+- Loading states
+
+## 5. Performance Optimization
+Key techniques for optimizing React apps:
+- Code splitting
+- Lazy loading
+- Memoization
+- Virtual DOM understanding
 
 ## Additional Resources
-- React official documentation
-- Community forums for support
+- React official documentation: https://reactjs.org
+- Community forums and Discord channels
 - Practice exercises recommended
 
-Note: AI-powered detailed notes are currently unavailable. These are basic structured notes.`;
+Note: AI-powered detailed notes are currently unavailable. These are basic structured notes with explanations.`;
       }
       if (error.message.includes("rate limit")) {
         throw new Error("Too many requests. Please wait a moment and try again.");

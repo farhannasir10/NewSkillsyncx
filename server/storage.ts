@@ -9,14 +9,14 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserXP(userId: number, xp: number): Promise<User>;
-  
+
   getPlaylists(): Promise<Playlist[]>;
   getPlaylist(id: number): Promise<Playlist | undefined>;
   createPlaylist(playlist: Omit<Playlist, "id">): Promise<Playlist>;
-  
+
   getProgress(userId: number, playlistId: number): Promise<Progress | undefined>;
   updateProgress(userId: number, playlistId: number, videoId: string): Promise<Progress>;
-  
+
   sessionStore: session.Store;
 }
 
@@ -34,8 +34,20 @@ export class MemStorage implements IStorage {
     this.currentIds = { users: 1, playlists: 1, progress: 1 };
     this.sessionStore = new MemoryStore({ checkPeriod: 86400000 });
 
+    // Create admin user
+    this.createAdminUser();
     // Add some sample playlists
     this.seedPlaylists();
+  }
+
+  private async createAdminUser() {
+    const adminUser: InsertUser = {
+      username: "admin",
+      password: "admin123", // This will be hashed by auth.ts
+    };
+    const user = await this.createUser(adminUser);
+    // Update the user to be an admin
+    this.users.set(user.id, { ...user, isAdmin: true });
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -53,6 +65,7 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id,
+      isAdmin: false,
       xp: 0,
       level: 1,
       achievements: []
@@ -64,7 +77,7 @@ export class MemStorage implements IStorage {
   async updateUserXP(userId: number, xp: number): Promise<User> {
     const user = await this.getUser(userId);
     if (!user) throw new Error("User not found");
-    
+
     user.xp += xp;
     user.level = Math.floor(user.xp / 1000) + 1;
     this.users.set(userId, user);
@@ -94,7 +107,7 @@ export class MemStorage implements IStorage {
   async updateProgress(userId: number, playlistId: number, videoId: string): Promise<Progress> {
     const key = `${userId}-${playlistId}`;
     let progress = await this.getProgress(userId, playlistId);
-    
+
     if (!progress) {
       progress = {
         id: this.currentIds.progress++,

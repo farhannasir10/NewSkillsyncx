@@ -17,6 +17,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(playlist);
   });
 
+  app.post("/api/playlists", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.user?.isAdmin) return res.sendStatus(403);
+
+    const playlist = await storage.createPlaylist({
+      ...req.body,
+      creatorId: req.user.id
+    });
+    res.status(201).json(playlist);
+  });
+
   app.get("/api/progress/:playlistId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const progress = await storage.getProgress(

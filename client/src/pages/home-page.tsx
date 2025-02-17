@@ -4,11 +4,12 @@ import { Playlist } from "@shared/schema";
 import PlaylistCard from "@/components/playlist-card";
 import { Button } from "@/components/ui/button";
 import XPBadge from "@/components/xp-badge";
-import { LogOut } from "lucide-react";
+import { Link } from "wouter";
+import { LogOut, Plus } from "lucide-react";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
-  
+
   const { data: playlists } = useQuery<Playlist[]>({
     queryKey: ["/api/playlists"],
   });
@@ -19,6 +20,14 @@ export default function HomePage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <h1 className="text-2xl font-bold">LearnHub</h1>
           <div className="flex items-center gap-4">
+            {user?.isAdmin && (
+              <Link href="/admin">
+                <Button variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Course
+                </Button>
+              </Link>
+            )}
             <XPBadge xp={user?.xp || 0} level={user?.level || 1} />
             <Button variant="ghost" size="icon" onClick={() => logoutMutation.mutate()}>
               <LogOut className="h-5 w-5" />

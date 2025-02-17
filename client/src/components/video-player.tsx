@@ -25,9 +25,7 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const [generatedNotes, setGeneratedNotes] = useState<string>("");
-  const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
   const { toast } = useToast();
-  const [currentTimestamp, setCurrentTimestamp] = useState(0);
 
   const completeMutation = useMutation({
     mutationFn: async () => {
@@ -46,12 +44,15 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
   });
 
   const generateNotesMutation = useMutation({
-    mutationFn: async (timestamp: number) => {
-      // For demo purposes, we'll use a mock transcript based on timestamp
-      const mockTranscript = `At ${Math.floor(timestamp / 60)}:${Math.floor(timestamp % 60)} - 
-      This section covers essential concepts including component architecture, 
-      state management, and useEffect hooks. We discuss best practices for building 
-      scalable React applications.`;
+    mutationFn: async () => {
+      // For demo purposes, we'll use a mock transcript
+      const mockTranscript = `This comprehensive video covers key concepts in React development including:
+      1. Component Architecture
+      2. State Management with React Query
+      3. Form Handling with React Hook Form
+      4. Authentication Patterns
+      5. API Integration Best Practices
+      We discuss real-world implementation examples and common pitfalls to avoid.`;
 
       const res = await fetch("/api/notes/generate", {
         method: "POST",
@@ -65,15 +66,13 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
       return data.notes;
     },
     onSuccess: (notes) => {
-      setGeneratedNotes(prev => prev + "\n\n" + notes);
-      setIsGeneratingNotes(false);
+      setGeneratedNotes(notes);
       toast({
-        title: "Notes Updated",
-        description: "New section notes generated",
+        title: "Success",
+        description: "Notes generated successfully!",
       });
     },
     onError: (error: Error) => {
-      setIsGeneratingNotes(false);
       toast({
         title: "Error",
         description: error.message,
@@ -84,7 +83,6 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
 
   useEffect(() => {
     let isMounted = true;
-    let interval: NodeJS.Timeout;
 
     if (!apiLoaded) {
       const tag = document.createElement("script");
@@ -122,25 +120,6 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
               if (event.data === 0) {
                 completeMutation.mutate();
               }
-              // Video is playing
-              if (event.data === 1) {
-                // Start periodic notes generation
-                interval = setInterval(async () => {
-                  if (!isGeneratingNotes) {
-                    const currentTime = playerRef.current.getCurrentTime();
-                    // Generate notes every 30 seconds
-                    if (Math.abs(currentTime - currentTimestamp) >= 30) {
-                      setCurrentTimestamp(currentTime);
-                      setIsGeneratingNotes(true);
-                      generateNotesMutation.mutate(currentTime);
-                    }
-                  }
-                }, 1000);
-              }
-              // Video is paused
-              if (event.data === 2) {
-                clearInterval(interval);
-              }
             },
           },
         });
@@ -149,7 +128,6 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
 
     return () => {
       isMounted = false;
-      clearInterval(interval);
       if (playerRef.current?.destroy) {
         try {
           playerRef.current.destroy();
@@ -165,6 +143,20 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div className="lg:col-span-2">
         <div ref={containerRef} />
+        <div className="mt-4 flex justify-end">
+          <Button
+            onClick={() => generateNotesMutation.mutate()}
+            disabled={generateNotesMutation.isPending}
+            className="gap-2"
+          >
+            {generateNotesMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            Generate Video Notes
+          </Button>
+        </div>
       </div>
       <div className="lg:col-span-1">
         <Card>
@@ -172,9 +164,6 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               AI Study Notes
-              {isGeneratingNotes && (
-                <Loader2 className="h-4 w-4 animate-spin ml-2" />
-              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[400px] overflow-y-auto prose prose-sm dark:prose-invert">
@@ -182,7 +171,7 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
               <ReactMarkdown>{generatedNotes}</ReactMarkdown>
             ) : (
               <p className="text-muted-foreground">
-                Notes will be generated as you watch the video...
+                Click the "Generate Video Notes" button to create study notes for this video.
               </p>
             )}
           </CardContent>

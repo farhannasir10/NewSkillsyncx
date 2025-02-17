@@ -1,6 +1,7 @@
-import { User, InsertUser, Playlist, Progress, Video } from "@shared/schema";
+import { User, InsertUser, Playlist, Progress } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { hashPassword } from "./utils/password";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -42,8 +43,8 @@ export class MemStorage implements IStorage {
 
   private async createAdminUser() {
     const adminUser: InsertUser = {
-      username: "admin",
-      password: "admin123", // This will be hashed by auth.ts
+      username: "admin@learnhub.com",
+      password: await hashPassword("Admin@123"),
     };
     const user = await this.createUser(adminUser);
     // Update the user to be an admin
@@ -62,9 +63,11 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentIds.users++;
+    const hashedPassword = await hashPassword(insertUser.password);
     const user: User = { 
       ...insertUser, 
       id,
+      password: hashedPassword,
       isAdmin: false,
       xp: 0,
       level: 1,

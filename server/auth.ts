@@ -4,7 +4,7 @@ import { Express } from "express";
 import session from "express-session";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import { comparePasswords } from "./utils/password";
+import { comparePasswords, hashPassword } from "./utils/password"; // Assuming hashPassword exists
 
 declare global {
   namespace Express {
@@ -14,14 +14,14 @@ declare global {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: "xK8Q9vN2$mP4#jL7", // More secure session secret
+    secret: "xK8Q9vN2$mP4#jL7",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
-      secure: false, // Set to true in production
+      secure: false,
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 24 * 60 * 60 * 1000
     }
   };
 
@@ -95,4 +95,23 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
+
+  // Add admin user creation.  This assumes storage.createUser handles password hashing.
+  async function createAdminUser() {
+    const hashedPassword = await hashPassword("Admin123!");
+    try {
+        const existingAdmin = await storage.getUserByUsername("admin@learnhub.com");
+        if (!existingAdmin) {
+            await storage.createUser({ username: "admin@learnhub.com", password: hashedPassword, isAdmin: true });
+            console.log("Admin user created successfully.");
+        } else {
+            console.log("Admin user already exists.");
+        }
+    } catch (error) {
+        console.error("Error creating admin user:", error);
+    }
+  }
+
+  createAdminUser(); // Call this function to create the admin user on startup.
+
 }

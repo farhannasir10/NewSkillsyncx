@@ -1,6 +1,12 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI();
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY environment variable is required for AI features");
+}
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 export async function generateVideoNotes(transcript: string): Promise<string> {
   try {
@@ -22,6 +28,9 @@ export async function generateVideoNotes(transcript: string): Promise<string> {
     return response.choices[0].message.content || "Failed to generate notes.";
   } catch (error) {
     console.error("AI notes generation failed:", error);
+    if (error instanceof Error && error.message.includes("API key")) {
+      throw new Error("Invalid or missing OpenAI API key. Please check your configuration.");
+    }
     throw new Error("Failed to generate notes. Please try again later.");
   }
 }

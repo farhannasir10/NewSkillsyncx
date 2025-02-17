@@ -39,16 +39,82 @@ export async function generateVideoNotes(transcript: string): Promise<string> {
 
 ## 1. React Development Fundamentals
 React is a JavaScript library for building user interfaces. Here's what you need to know:
-- **Components**: Building blocks of React applications
-- **Props**: Pass data between components
-- **State**: Manage component data
-- **Hooks**: Functions that let you use state and other React features
 
-## 2. State Management
-Understanding how to manage state is crucial in React:
-- Use useState for local component state
-- Consider useContext for global state
-- Learn when to use external state management libraries
+### Components
+The fundamental building blocks of React applications. Components are reusable pieces of UI that can contain their own logic and styling.
+\`\`\`jsx
+// Function Component Example
+function Welcome({ name }) {
+  return <h1>Hello, {name}!</h1>;
+}
+\`\`\`
+
+### Props
+Props are read-only properties passed to components, enabling parent-to-child component communication.
+\`\`\`jsx
+// Parent Component
+<Welcome name="John" />
+\`\`\`
+
+### State
+State represents mutable data in a component that can change over time. When state changes, React re-renders the component.
+\`\`\`jsx
+const [count, setCount] = useState(0);
+// Use setCount to update the state
+\`\`\`
+
+### Hooks
+Functions that let you use state and other React features in function components:
+- useState: Manage local state
+- useEffect: Handle side effects
+- useContext: Access context data
+- useRef: Reference DOM elements
+
+## 2. State Management in React
+State management is crucial for handling data flow in React applications:
+
+### Local Component State (useState)
+Used for component-specific data that doesn't need to be shared:
+\`\`\`jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+\`\`\`
+
+### Context API (useContext)
+For sharing state between components without prop drilling:
+\`\`\`jsx
+// Create context
+const ThemeContext = createContext('light');
+
+// Provider component
+function App() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <MainContent />
+    </ThemeContext.Provider>
+  );
+}
+
+// Consumer component
+function MainContent() {
+  const theme = useContext(ThemeContext);
+  return <div className={theme}>Content</div>;
+}
+\`\`\`
+
+### State Management Libraries
+For complex applications, consider using:
+- Redux: Centralized state management
+- React Query: Server state management
+- Zustand: Simple state management
+- Jotai: Atomic state management
 
 ## 3. Form Handling
 Best practices for handling forms in React:
@@ -67,7 +133,7 @@ How to work with APIs in React:
 Key techniques for optimizing React apps:
 - Code splitting
 - Lazy loading
-- Memoization
+- Memoization with useMemo and useCallback
 - Virtual DOM understanding
 
 ## Additional Resources
@@ -75,7 +141,7 @@ Key techniques for optimizing React apps:
 - Community forums and Discord channels
 - Practice exercises recommended
 
-Note: AI-powered detailed notes are currently unavailable. These are basic structured notes with explanations.`;
+Note: AI-powered detailed notes are currently unavailable. These are basic structured notes with detailed explanations and examples.`;
       }
       if (error.message.includes("rate limit")) {
         throw new Error("Too many requests. Please wait a moment and try again.");

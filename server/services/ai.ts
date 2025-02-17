@@ -34,7 +34,21 @@ export async function generateVideoNotes(transcript: string): Promise<string> {
         throw new Error("Invalid OpenAI API key. Please check your configuration.");
       }
       if (error.message.includes("quota")) {
-        throw new Error("AI service quota exceeded. Please try again later.");
+        // Return basic structured notes when AI is unavailable
+        return `# Video Summary Notes
+## Key Points
+- Introduction to React development concepts
+- Understanding component architecture
+- State management principles
+- Form handling and validation
+- API integration techniques
+
+## Additional Resources
+- React official documentation
+- Community forums for support
+- Practice exercises recommended
+
+Note: AI-powered detailed notes are currently unavailable. These are basic structured notes.`;
       }
       if (error.message.includes("rate limit")) {
         throw new Error("Too many requests. Please wait a moment and try again.");

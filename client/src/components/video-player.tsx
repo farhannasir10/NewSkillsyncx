@@ -77,11 +77,20 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "AI Service Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Check if the error includes quota exceeded message
+      if (error.message.includes("quota exceeded")) {
+        toast({
+          title: "Using Basic Notes",
+          description: "AI service is temporarily unavailable. Showing basic structured notes instead.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "AI Service Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
   });
 

@@ -21,7 +21,7 @@ declare global {
 
 let apiLoaded = false;
 
-export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
+export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const [generatedNotes, setGeneratedNotes] = useState<string>("");
@@ -192,4 +192,4 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
       </div>
     </div>
   );
-}
+};

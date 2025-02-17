@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Playlist } from "@shared/schema";
+import { Playlist, Progress as ProgressType, Video } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useState } from "react";
-import VideoPlayer from "./video-player";
+import { VideoPlayer } from "./video-player";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +22,7 @@ export default function PlaylistCard({ playlist, userId, showAdminActions }: Pla
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
-  const { data: progress } = useQuery({
+  const { data: progress } = useQuery<ProgressType>({
     queryKey: [`/api/progress/${playlist.id}`],
     enabled: userId > 0,
   });
@@ -52,7 +52,7 @@ export default function PlaylistCard({ playlist, userId, showAdminActions }: Pla
   });
 
   const completedCount = progress?.completedVideos?.length || 0;
-  const totalVideos = playlist.videos.length;
+  const totalVideos = (playlist.videos as Video[]).length;
   const progressPercent = (completedCount / totalVideos) * 100;
 
   return (
@@ -82,7 +82,7 @@ export default function PlaylistCard({ playlist, userId, showAdminActions }: Pla
             <Progress value={progressPercent} />
 
             <div className="space-y-2">
-              {playlist.videos.map((video) => (
+              {(playlist.videos as Video[]).map((video) => (
                 <button
                   key={video.id}
                   onClick={() => setSelectedVideo(video.id)}
@@ -105,7 +105,7 @@ export default function PlaylistCard({ playlist, userId, showAdminActions }: Pla
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>
-              {playlist.videos.find(v => v.id === selectedVideo)?.title}
+              {(playlist.videos as Video[]).find(v => v.id === selectedVideo)?.title}
             </DialogTitle>
           </DialogHeader>
           {selectedVideo && (

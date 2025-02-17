@@ -1,9 +1,12 @@
-import { User, InsertUser, Playlist, Progress } from "@shared/schema";
+import { User, InsertUser, Playlist, Progress, users, playlists, progress } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 import { hashPassword } from "./utils/password";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -22,60 +25,43 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private playlists: Map<number, Playlist>;
-  private progress: Map<string, Progress>;
-  private currentIds: { [key: string]: number };
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.playlists = new Map();
-    this.progress = new Map();
-    this.currentIds = { users: 1, playlists: 1, progress: 1 };
-    this.sessionStore = new MemoryStore({ checkPeriod: 86400000 });
-
-    // Create admin user
-    this.createAdminUser();
-    // Add some sample playlists
-    this.seedPlaylists();
-  }
-
-  private async createAdminUser() {
-    const adminUser: InsertUser = {
-      username: "admin@learnhub.com",
-      password: "Admin@123", // Will be hashed in createUser
-    };
-    const user = await this.createUser(adminUser);
-    // Update the user to be an admin after creation
-    const adminData = { ...user, isAdmin: true };
-    this.users.set(user.id, adminData);
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
+    });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentIds.users++;
     const hashedPassword = await hashPassword(insertUser.password);
-    const user: User = {
-      ...insertUser,
-      id,
-      password: hashedPassword,
-      isAdmin: false,
-      xp: 0,
-      level: 1,
-      achievements: []
-    };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        password: hashedPassword,
+        isAdmin: false,
+        xp: 0,
+        level: 1,
+        achievements: [],
+        careerPath: null,
+        bio: null,
+        avatarUrl: null,
+        createdAt: new Date()
+      })
+      .returning();
     return user;
   }
 
@@ -83,89 +69,96 @@ export class MemStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) throw new Error("User not found");
 
-    user.xp += xp;
-    user.level = Math.floor(user.xp / 1000) + 1;
-    this.users.set(userId, user);
-    return user;
+    const newXP = user.xp + xp;
+    const newLevel = Math.floor(newXP / 1000) + 1;
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({ xp: newXP, level: newLevel })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return updatedUser;
   }
 
   async getPlaylists(): Promise<Playlist[]> {
-    return Array.from(this.playlists.values());
+    return await db.select().from(playlists);
   }
 
   async getPlaylist(id: number): Promise<Playlist | undefined> {
-    return this.playlists.get(id);
+    const [playlist] = await db.select().from(playlists).where(eq(playlists.id, id));
+    return playlist;
   }
 
   async createPlaylist(playlist: Omit<Playlist, "id">): Promise<Playlist> {
-    const id = this.currentIds.playlists++;
-    const newPlaylist = { ...playlist, id };
-    this.playlists.set(id, newPlaylist);
+    const [newPlaylist] = await db
+      .insert(playlists)
+      .values({
+        ...playlist,
+        category: null,
+        difficulty: null,
+        createdAt: new Date()
+      })
+      .returning();
     return newPlaylist;
   }
 
   async deletePlaylist(id: number): Promise<void> {
-    this.playlists.delete(id);
+    await db.delete(playlists).where(eq(playlists.id, id));
   }
 
   async getProgress(userId: number, playlistId: number): Promise<Progress | undefined> {
-    const key = `${userId}-${playlistId}`;
-    return this.progress.get(key);
+    const [userProgress] = await db
+      .select()
+      .from(progress)
+      .where(eq(progress.userId, userId))
+      .where(eq(progress.playlistId, playlistId));
+    return userProgress;
   }
 
   async updateProgress(userId: number, playlistId: number, videoId: string): Promise<Progress> {
-    const key = `${userId}-${playlistId}`;
-    let progress = await this.getProgress(userId, playlistId);
+    let userProgress = await this.getProgress(userId, playlistId);
 
-    if (!progress) {
-      progress = {
-        id: this.currentIds.progress++,
-        userId,
-        playlistId,
-        completedVideos: [],
-        lastWatched: videoId
-      };
+    if (!userProgress) {
+      // Create new progress entry
+      const [newProgress] = await db
+        .insert(progress)
+        .values({
+          userId,
+          playlistId,
+          completedVideos: [videoId],
+          lastWatched: videoId,
+          updatedAt: new Date()
+        })
+        .returning();
+
+      // Award XP for first video completion
+      await this.updateUserXP(userId, 50);
+
+      return newProgress;
     }
 
-    if (!progress.completedVideos.includes(videoId)) {
-      progress.completedVideos = [...progress.completedVideos, videoId];
-      progress.lastWatched = videoId;
-      await this.updateUserXP(userId, 50); // Award XP for completing a video
+    // Update existing progress
+    if (!userProgress.completedVideos.includes(videoId)) {
+      const completedVideos = [...userProgress.completedVideos, videoId];
+      const [updatedProgress] = await db
+        .update(progress)
+        .set({
+          completedVideos,
+          lastWatched: videoId,
+          updatedAt: new Date()
+        })
+        .where(eq(progress.id, userProgress.id))
+        .returning();
+
+      // Award XP for completing new video
+      await this.updateUserXP(userId, 50);
+
+      return updatedProgress;
     }
 
-    this.progress.set(key, progress);
-    return progress;
-  }
-
-  private seedPlaylists() {
-    const samplePlaylists: Omit<Playlist, "id">[] = [
-      {
-        title: "React Fundamentals",
-        description: "Learn React from scratch with practical examples",
-        creatorId: 1,
-        playlistUrl: "https://www.youtube.com/playlist?list=PLN3n1USn4xlntqksY83W3997mmQPrUmqM",
-        videos: [
-          { id: "w7ejDZ8SWv8", title: "React JS Crash Course", thumbnail: "", duration: "1:48:47" },
-          { id: "4UZrsTqkcW4", title: "React Tutorial for Beginners", thumbnail: "", duration: "2:30:33" }
-        ],
-        tags: ["react", "javascript", "frontend"]
-      },
-      {
-        title: "Node.js Essentials",
-        description: "Master backend development with Node.js",
-        creatorId: 1,
-        playlistUrl: "https://www.youtube.com/playlist?list=PL4cUxeGkcC9jsz4LDYc6kv3ymONOKxwBU",
-        videos: [
-          { id: "Oe421EPjeBE", title: "Node.js and Express.js - Full Course", thumbnail: "", duration: "8:16:48" }
-        ],
-        tags: ["nodejs", "javascript", "backend"]
-      }
-    ];
-
-    samplePlaylists.forEach(playlist => {
-      this.createPlaylist(playlist);
-    });
+    return userProgress;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

@@ -14,12 +14,12 @@ declare global {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: "xK8Q9vN2$mP4#jL7",
+    secret: process.env.SESSION_SECRET || "xK8Q9vN2$mP4#jL7", // Fallback for development
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000
     }
@@ -108,12 +108,12 @@ export function setupAuth(app: Express) {
         } catch (error){
           console.log("storage.deleteUser failed. Attempting db.delete");
           //Assuming db and users are defined elsewhere, this is a best effort fix.
-          if(db && users){
-            await db.delete(users).where(eq(users.id, existingAdmin.id));
-            console.log("Existing admin user deleted using db.delete.");
-          } else {
-            console.error("Could not delete existing admin user. db or users not defined.");
-          }
+          // if(db && users){
+          //   await db.delete(users).where(eq(users.id, existingAdmin.id));
+          //   console.log("Existing admin user deleted using db.delete.");
+          // } else {
+          //   console.error("Could not delete existing admin user. db or users not defined.");
+          // }
         }
       }
       //Attempt to use storage.createAdminUser, fallback to manual creation.

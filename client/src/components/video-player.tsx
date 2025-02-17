@@ -17,7 +17,9 @@ declare global {
 let apiLoaded = false;
 
 export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
+
   const completeMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/progress/${playlistId}/complete`, {
@@ -35,6 +37,8 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
   });
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!apiLoaded) {
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
@@ -42,39 +46,55 @@ export default function VideoPlayer({ videoId, playlistId }: VideoPlayerProps) {
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
       apiLoaded = true;
 
-      window.onYouTubeIframeAPIReady = initPlayer;
+      window.onYouTubeIframeAPIReady = () => {
+        if (isMounted) {
+          initPlayer();
+        }
+      };
     } else {
       initPlayer();
     }
 
     function initPlayer() {
-      if (playerRef.current) return;
-      
-      playerRef.current = new window.YT.Player("youtube-player", {
-        height: "500",
-        width: "100%",
-        videoId,
-        playerVars: {
-          playsinline: 1,
-        },
-        events: {
-          onStateChange: (event: any) => {
-            // Video ended
-            if (event.data === 0) {
-              completeMutation.mutate();
-            }
+      // Clean up existing player if any
+      if (playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
+
+      // Only create new player if container exists and we don't have a player
+      if (containerRef.current && !playerRef.current && window.YT?.Player) {
+        playerRef.current = new window.YT.Player(containerRef.current, {
+          height: "500",
+          width: "100%",
+          videoId,
+          playerVars: {
+            playsinline: 1,
           },
-        },
-      });
+          events: {
+            onStateChange: (event: any) => {
+              // Video ended
+              if (event.data === 0) {
+                completeMutation.mutate();
+              }
+            },
+          },
+        });
+      }
     }
 
     return () => {
-      if (playerRef.current) {
-        playerRef.current.destroy();
+      isMounted = false;
+      if (playerRef.current?.destroy) {
+        try {
+          playerRef.current.destroy();
+        } catch (e) {
+          console.error("Failed to destroy player:", e);
+        }
         playerRef.current = null;
       }
     };
   }, [videoId]);
 
-  return <div id="youtube-player" />;
+  return <div ref={containerRef} />;
 }

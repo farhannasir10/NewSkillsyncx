@@ -34,6 +34,7 @@ export default function CoursesPage() {
               key={playlist.id}
               playlist={playlist}
               userId={user?.id || 0}
+              showAdminActions={user?.isAdmin}
             />
           ))}
         </div>

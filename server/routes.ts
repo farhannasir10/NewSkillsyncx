@@ -28,6 +28,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(playlist);
   });
 
+  app.delete("/api/playlists/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.user?.isAdmin) return res.sendStatus(403);
+
+    await storage.deletePlaylist(parseInt(req.params.id));
+    res.sendStatus(200);
+  });
+
   app.get("/api/progress/:playlistId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const progress = await storage.getProgress(

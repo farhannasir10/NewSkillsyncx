@@ -14,6 +14,7 @@ export interface IStorage {
   getPlaylists(): Promise<Playlist[]>;
   getPlaylist(id: number): Promise<Playlist | undefined>;
   createPlaylist(playlist: Omit<Playlist, "id">): Promise<Playlist>;
+  deletePlaylist(id: number): Promise<void>;
 
   getProgress(userId: number, playlistId: number): Promise<Progress | undefined>;
   updateProgress(userId: number, playlistId: number, videoId: string): Promise<Progress>;
@@ -101,6 +102,10 @@ export class MemStorage implements IStorage {
     const newPlaylist = { ...playlist, id };
     this.playlists.set(id, newPlaylist);
     return newPlaylist;
+  }
+
+  async deletePlaylist(id: number): Promise<void> {
+    this.playlists.delete(id);
   }
 
   async getProgress(userId: number, playlistId: number): Promise<Progress | undefined> {

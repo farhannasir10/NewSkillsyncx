@@ -23,3 +23,11 @@ export async function comparePasswords(supplied: string, stored: string) {
     return false;
   }
 }
+
+// Add a function to get a hashed password synchronously for admin setup
+export function getHashedPasswordSync(password: string): string {
+  const crypto = require('crypto');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64);
+  return `${hash.toString('hex')}.${salt}`;
+}

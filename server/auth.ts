@@ -14,10 +14,15 @@ declare global {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: "xK8Q9vN2$mP4#jL7", // More secure session secret
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: false, // Set to true in production
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
   };
 
   app.set("trust proxy", 1);
@@ -35,6 +40,8 @@ export function setupAuth(app: Express) {
           console.log("User not found:", username);
           return done(null, false);
         }
+
+        console.log("Found user:", { id: user.id, username: user.username, isAdmin: user.isAdmin });
 
         const isValid = await comparePasswords(password, user.password);
         console.log("Password valid:", isValid);

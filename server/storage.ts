@@ -12,6 +12,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createAdminUser(username: string, password: string): Promise<User>; // Added method
   updateUserXP(userId: number, xp: number): Promise<User>;
 
   getPlaylists(): Promise<Playlist[]>;
@@ -53,6 +54,26 @@ export class DatabaseStorage implements IStorage {
         ...insertUser,
         password: hashedPassword,
         isAdmin: false,
+        xp: 0,
+        level: 1,
+        achievements: [],
+        careerPath: null,
+        bio: null,
+        avatarUrl: null,
+        createdAt: new Date()
+      })
+      .returning();
+    return user;
+  }
+
+  async createAdminUser(username: string, password: string): Promise<User> {
+    const hashedPassword = await hashPassword(password);
+    const [user] = await db
+      .insert(users)
+      .values({
+        username,
+        password: hashedPassword,
+        isAdmin: true,
         xp: 0,
         level: 1,
         achievements: [],

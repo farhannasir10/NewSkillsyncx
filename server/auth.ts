@@ -96,20 +96,38 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 
-  // Add admin user creation with new password
+  //Revised createAdminUser function
   async function createAdminUser() {
-    const hashedPassword = await hashPassword("Admin@123");
     try {
-        const existingAdmin = await storage.getUserByUsername("admin@learnhub.com");
-        if (existingAdmin) {
-          // Delete existing admin user if found.  Implementation depends on your storage.deleteUser method.
-          await storage.deleteUser(existingAdmin.id); // Assumes you have a deleteUser function in your storage
-          console.log("Existing admin user deleted.");
+      const existingAdmin = await storage.getUserByUsername("admin@learnhub.com");
+      if (existingAdmin) {
+        //Attempt to delete using storage.deleteUser first, fallback to db.delete if it exists.
+        try{
+          await storage.deleteUser(existingAdmin.id);
+          console.log("Existing admin user deleted using storage.deleteUser.");
+        } catch (error){
+          console.log("storage.deleteUser failed. Attempting db.delete");
+          //Assuming db and users are defined elsewhere, this is a best effort fix.
+          if(db && users){
+            await db.delete(users).where(eq(users.id, existingAdmin.id));
+            console.log("Existing admin user deleted using db.delete.");
+          } else {
+            console.error("Could not delete existing admin user. db or users not defined.");
+          }
         }
+      }
+      //Attempt to use storage.createAdminUser, fallback to manual creation.
+      try{
+        await storage.createAdminUser("admin@learnhub.com", "Admin@123");
+        console.log("Admin user created successfully using storage.createAdminUser.");
+      } catch (error){
+        console.log("storage.createAdminUser failed. Attempting manual user creation.");
+        const hashedPassword = await hashPassword("Admin@123");
         await storage.createUser({ username: "admin@learnhub.com", password: hashedPassword, isAdmin: true });
         console.log("Admin user created successfully.");
+      }
     } catch (error) {
-        console.error("Error creating admin user:", error);
+      console.error("Error creating admin user:", error);
     }
   }
 

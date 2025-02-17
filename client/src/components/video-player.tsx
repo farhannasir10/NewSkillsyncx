@@ -19,11 +19,8 @@ declare global {
   }
 }
 
-let apiLoaded = false;
-
 export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
   const playerContainerRef = useRef<HTMLDivElement>(null);
-  const [player, setPlayer] = useState<any>(null);
   const [generatedNotes, setGeneratedNotes] = useState<string>("");
   const [playerError, setPlayerError] = useState<string>("");
   const { toast } = useToast();
@@ -69,16 +66,15 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
           - useEffect dependencies
           - Hook optimization strategies
           - Real-world examples`,
-        // Add more unique content for other videos
       };
 
       const transcript = mockTranscripts[videoId] || `
-        Video Content Overview:
-        - Understanding key concepts
+        Video Content Overview for ${videoId}:
+        - Key concepts and principles
         - Implementation strategies
-        - Best practices overview
+        - Best practices and patterns
         - Common pitfalls to avoid
-        - Practical examples for ${videoId}
+        - Practical examples and exercises
       `;
 
       const res = await fetch("/api/notes/generate", {
@@ -113,59 +109,65 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
   });
 
   useEffect(() => {
-    // Load YouTube API if not already loaded
-    if (!apiLoaded) {
+    // Load YouTube API
+    if (!window.YT) {
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       const firstScriptTag = document.getElementsByTagName("script")[0];
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-      apiLoaded = true;
     }
+
+    let player: any = null;
 
     // Initialize player when API is ready
     const initializePlayer = () => {
       if (!playerContainerRef.current) return;
 
-      const newPlayer = new window.YT.Player(playerContainerRef.current, {
-        videoId,
-        height: "400",
-        width: "100%",
-        playerVars: {
-          autoplay: 0,
-          modestbranding: 1,
-          rel: 0,
-          playsinline: 1,
-        },
-        events: {
-          onReady: () => {
-            setPlayerError("");
-            setPlayer(newPlayer);
+      // Clear any existing content
+      playerContainerRef.current.innerHTML = "";
+
+      // Create a new div for the player
+      const playerElement = document.createElement("div");
+      playerContainerRef.current.appendChild(playerElement);
+
+      try {
+        player = new window.YT.Player(playerElement, {
+          videoId,
+          height: "400",
+          width: "100%",
+          playerVars: {
+            autoplay: 0,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
           },
-          onStateChange: (event: any) => {
-            if (event.data === window.YT.PlayerState.ENDED) {
-              completeMutation.mutate();
-            }
+          events: {
+            onReady: () => setPlayerError(""),
+            onStateChange: (event: any) => {
+              if (event.data === window.YT.PlayerState.ENDED) {
+                completeMutation.mutate();
+              }
+            },
+            onError: (event: any) => {
+              const errors: Record<number, string> = {
+                2: "Invalid video ID",
+                5: "HTML5 player error",
+                100: "Video not found",
+                101: "Embedded playback not allowed",
+                150: "Embedded playback not allowed",
+              };
+              setPlayerError(errors[event.data] || "An error occurred playing the video");
+            },
           },
-          onError: (event: any) => {
-            const errors: Record<number, string> = {
-              2: "Invalid video ID",
-              5: "HTML5 player error",
-              100: "Video not found",
-              101: "Embedded playback not allowed",
-              150: "Embedded playback not allowed",
-            };
-            setPlayerError(errors[event.data] || "An error occurred playing the video");
-          },
-        },
-      });
+        });
+      } catch (error) {
+        console.error("Error initializing player:", error);
+        setPlayerError("Failed to initialize video player");
+      }
     };
 
-    // Handle API ready state
+    // Create or update player when API is ready
     if (window.YT && window.YT.Player) {
-      // If player exists, destroy it before creating a new one
-      if (player) {
-        player.destroy();
-      }
       initializePlayer();
     } else {
       window.onYouTubeIframeAPIReady = initializePlayer;
@@ -173,16 +175,11 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
 
     // Cleanup
     return () => {
-      if (player) {
-        try {
-          player.destroy();
-          setPlayer(null);
-        } catch (error) {
-          console.error("Error destroying player:", error);
-        }
+      if (playerContainerRef.current) {
+        playerContainerRef.current.innerHTML = "";
       }
     };
-  }, [videoId]); // Only re-run when videoId changes
+  }, [videoId]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -193,7 +190,7 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
           </div>
         ) : (
           <div className="aspect-video">
-            <div id="youtube-player" ref={playerContainerRef} className="w-full h-full" />
+            <div ref={playerContainerRef} className="w-full h-full" />
           </div>
         )}
         <div className="mt-4 flex justify-end">

@@ -12,7 +12,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  createAdminUser(username: string, password: string): Promise<User>; // Added method
+  createAdminUser(username: string, password: string): Promise<User>;
   updateUserXP(userId: number, xp: number): Promise<User>;
 
   getPlaylists(): Promise<Playlist[]>;
@@ -68,6 +68,8 @@ export class DatabaseStorage implements IStorage {
 
   async createAdminUser(username: string, password: string): Promise<User> {
     const hashedPassword = await hashPassword(password);
+    console.log("Creating admin user with hash:", hashedPassword);
+
     const [user] = await db
       .insert(users)
       .values({
@@ -141,7 +143,6 @@ export class DatabaseStorage implements IStorage {
     let userProgress = await this.getProgress(userId, playlistId);
 
     if (!userProgress) {
-      // Create new progress entry
       const [newProgress] = await db
         .insert(progress)
         .values({
@@ -153,13 +154,11 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
 
-      // Award XP for first video completion
       await this.updateUserXP(userId, 50);
 
       return newProgress;
     }
 
-    // Update existing progress
     if (!userProgress.completedVideos.includes(videoId)) {
       const completedVideos = [...userProgress.completedVideos, videoId];
       const [updatedProgress] = await db
@@ -172,7 +171,6 @@ export class DatabaseStorage implements IStorage {
         .where(eq(progress.id, userProgress.id))
         .returning();
 
-      // Award XP for completing new video
       await this.updateUserXP(userId, 50);
 
       return updatedProgress;

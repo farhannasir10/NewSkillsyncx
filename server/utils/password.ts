@@ -11,13 +11,16 @@ export async function hashPassword(password: string) {
 
 export async function comparePasswords(supplied: string, stored: string) {
   try {
-    const [hashed, salt] = stored.split(".");
-    if (!hashed || !salt) {
+    const [hashedStoredPassword, salt] = stored.split(".");
+    if (!hashedStoredPassword || !salt) {
+      console.error("Invalid stored password format");
       return false;
     }
-    const hashedBuf = Buffer.from(hashed, "hex");
-    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+
+    const hashedSuppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    const hashedStoredBuf = Buffer.from(hashedStoredPassword, "hex");
+
+    return timingSafeEqual(hashedSuppliedBuf, hashedStoredBuf);
   } catch (error) {
     console.error("Password comparison failed:", error);
     return false;

@@ -96,22 +96,22 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 
-  // Add admin user creation.  This assumes storage.createUser handles password hashing.
+  // Add admin user creation with new password
   async function createAdminUser() {
-    const hashedPassword = await hashPassword("Admin123!");
+    const hashedPassword = await hashPassword("Admin@123");
     try {
         const existingAdmin = await storage.getUserByUsername("admin@learnhub.com");
-        if (!existingAdmin) {
-            await storage.createUser({ username: "admin@learnhub.com", password: hashedPassword, isAdmin: true });
-            console.log("Admin user created successfully.");
-        } else {
-            console.log("Admin user already exists.");
+        if (existingAdmin) {
+          // Delete existing admin user if found.  Implementation depends on your storage.deleteUser method.
+          await storage.deleteUser(existingAdmin.id); // Assumes you have a deleteUser function in your storage
+          console.log("Existing admin user deleted.");
         }
+        await storage.createUser({ username: "admin@learnhub.com", password: hashedPassword, isAdmin: true });
+        console.log("Admin user created successfully.");
     } catch (error) {
         console.error("Error creating admin user:", error);
     }
   }
 
-  createAdminUser(); // Call this function to create the admin user on startup.
-
+  createAdminUser();
 }

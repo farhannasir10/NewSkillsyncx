@@ -44,11 +44,12 @@ export class MemStorage implements IStorage {
   private async createAdminUser() {
     const adminUser: InsertUser = {
       username: "admin@learnhub.com",
-      password: await hashPassword("Admin@123"),
+      password: "Admin@123", // Will be hashed in createUser
     };
     const user = await this.createUser(adminUser);
-    // Update the user to be an admin
-    this.users.set(user.id, { ...user, isAdmin: true });
+    // Update the user to be an admin after creation
+    const adminData = { ...user, isAdmin: true };
+    this.users.set(user.id, adminData);
   }
 
   async getUser(id: number): Promise<User | undefined> {

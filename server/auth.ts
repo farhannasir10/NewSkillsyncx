@@ -27,11 +27,26 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user || !(await comparePasswords(password, user.password))) {
-        return done(null, false);
-      } else {
-        return done(null, user);
+      try {
+        const user = await storage.getUserByUsername(username);
+        console.log("Login attempt for:", username);
+
+        if (!user) {
+          console.log("User not found:", username);
+          return done(null, false);
+        }
+
+        const isValid = await comparePasswords(password, user.password);
+        console.log("Password valid:", isValid);
+
+        if (!isValid) {
+          return done(null, false);
+        } else {
+          return done(null, user);
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        return done(error);
       }
     }),
   );

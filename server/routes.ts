@@ -5,7 +5,10 @@ import { storage } from "./storage";
 import { generateVideoNotes } from "./services/ai";
 import { google } from 'googleapis';
 
-const youtube = google.youtube('v3');
+const youtube = google.youtube({
+  version: 'v3',
+  auth: process.env.YOUTUBE_API_KEY
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);

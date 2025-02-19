@@ -139,8 +139,20 @@ export default function AdminDashboard() {
                           onChange={(e) => {
                             field.onChange(e);
                             // Extract playlist ID
-                            const url = new URL(e.target.value);
-                            const playlistId = url.searchParams.get('list');
+                            let playlistId;
+                            try {
+                              const url = new URL(e.target.value);
+                              playlistId = url.searchParams.get('list');
+                              if (!playlistId) {
+                                // Try extracting from other URL formats
+                                const matches = e.target.value.match(/(?:list=)([a-zA-Z0-9_-]+)/i);
+                                playlistId = matches ? matches[1] : null;
+                              }
+                            } catch {
+                              // If URL parsing fails, try direct regex match
+                              const matches = e.target.value.match(/(?:list=)([a-zA-Z0-9_-]+)/i);
+                              playlistId = matches ? matches[1] : null;
+                            }
                             if (playlistId) {
                               // Fetch video details from playlist
                               fetch(`/api/youtube/playlist/${playlistId}`)

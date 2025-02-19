@@ -1,4 +1,3 @@
-
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
@@ -30,12 +29,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'No videos found in playlist' });
       }
 
-      const videos = response.data.items.map(item => ({
-        id: item.snippet?.resourceId?.videoId || '',
-        title: item.snippet?.title || 'Untitled Video',
-        thumbnail: item.snippet?.thumbnails?.default?.url || '',
-        duration: item.contentDetails?.duration || ''
-      })).filter(video => video.id && video.title);
+      const videos = response.data.items?.map(item => {
+        const videoId = item.snippet?.resourceId?.videoId;
+        return {
+          id: videoId || '',
+          title: item.snippet?.title || 'Untitled Video',
+          thumbnail: item.snippet?.thumbnails?.medium?.url || '',
+          duration: durationMap.get(videoId) || ''
+        };
+      }).filter(video => video.id && video.title);
 
       if (videos.length === 0) {
         return res.status(404).json({ error: 'No valid videos found in playlist' });

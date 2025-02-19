@@ -16,7 +16,7 @@ import { z } from "zod";
 const videoSchema = z.object({
   id: z.string().min(1, "Video ID is required"),
   title: z.string().min(1, "Title is required"),
-  duration: z.string().min(1, "Duration is required"),
+  duration: z.string().optional(),
 });
 
 const createPlaylistSchema = insertPlaylistSchema.extend({

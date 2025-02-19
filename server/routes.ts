@@ -26,16 +26,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxResults: 50
       });
 
-      const videos = response.data.items?.map(item => ({
-        id: item.snippet?.resourceId?.videoId,
-        title: item.snippet?.title,
-        thumbnail: item.snippet?.thumbnails?.default?.url
-      })) || [];
+      if (!response.data.items || response.data.items.length === 0) {
+        return res.status(404).json({ error: 'No videos found in playlist' });
+      }
+
+      const videos = response.data.items.map(item => ({
+        id: item.snippet?.resourceId?.videoId || '',
+        title: item.snippet?.title || 'Untitled Video',
+        thumbnail: item.snippet?.thumbnails?.default?.url || '',
+        duration: item.contentDetails?.duration || ''
+      })).filter(video => video.id && video.title);
+
+      if (videos.length === 0) {
+        return res.status(404).json({ error: 'No valid videos found in playlist' });
+      }
 
       res.json(videos);
     } catch (error) {
       console.error('YouTube API error:', error);
-      res.status(500).json({ error: 'Failed to fetch playlist data' });
+      const message = error.response?.data?.error?.message || 'Failed to fetch playlist data';
+      res.status(500).json({ error: message });
     }
   });
 

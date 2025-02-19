@@ -44,28 +44,20 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
   const generateNotesMutation = useMutation({
     mutationFn: async () => {
       // Unique mock transcripts based on videoId
+      // Get unique transcript based on video ID
       const mockTranscripts: Record<string, string> = {
-        "video1": `
-          React Components and Props
-          - Understanding component lifecycle
-          - Props vs State comparison
-          - Component composition patterns
-          - Best practices for component design
-          - Practical exercises and examples`,
-        "video2": `
-          State Management Deep Dive
-          - Local state with useState
-          - Context API implementation
-          - Redux architecture overview
-          - State management patterns
-          - Performance considerations`,
-        "video3": `
-          React Hooks in Practice
-          - Common hooks explained
-          - Custom hook patterns
-          - useEffect dependencies
-          - Hook optimization strategies
-          - Real-world examples`,
+        [videoId]: `
+          ${videoId} Content Overview
+          - Introduction to key concepts
+          - Technical implementation details
+          - Best practices and patterns
+          - Common challenges and solutions
+          - Hands-on coding examples
+          - Performance optimization tips
+          - Integration with other features
+          - Testing and debugging strategies
+          - Production deployment considerations
+          - Advanced use cases and scenarios`
       };
 
       const transcript = mockTranscripts[videoId] || `

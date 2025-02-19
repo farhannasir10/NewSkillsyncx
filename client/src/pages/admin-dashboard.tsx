@@ -136,6 +136,26 @@ export default function AdminDashboard() {
                         <Input 
                           {...field} 
                           placeholder="https://www.youtube.com/playlist?list=..."
+                          onChange={(e) => {
+                            field.onChange(e);
+                            // Extract playlist ID
+                            const url = new URL(e.target.value);
+                            const playlistId = url.searchParams.get('list');
+                            if (playlistId) {
+                              // Fetch video details from playlist
+                              fetch(`/api/youtube/playlist/${playlistId}`)
+                                .then(res => res.json())
+                                .then(videos => {
+                                  form.setValue('videos', videos.map((video: any) => ({
+                                    id: video.id,
+                                    title: video.title,
+                                    duration: video.duration || '',
+                                    thumbnail: video.thumbnail
+                                  })));
+                                })
+                                .catch(console.error);
+                            }
+                          }}
                         />
                       </FormControl>
                     </FormItem>

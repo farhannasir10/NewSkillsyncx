@@ -12,6 +12,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(playlists);
   });
 
+
+import { google } from 'googleapis';
+
+const youtube = google.youtube('v3');
+
+app.get("/api/youtube/playlist/:playlistId", async (req, res) => {
+  try {
+    const playlistId = req.params.playlistId;
+    const response = await youtube.playlistItems.list({
+      key: process.env.YOUTUBE_API_KEY,
+      part: ['snippet', 'contentDetails'],
+      playlistId: playlistId,
+      maxResults: 50
+    });
+
+    const videos = response.data.items?.map(item => ({
+      id: item.snippet?.resourceId?.videoId,
+      title: item.snippet?.title,
+      thumbnail: item.snippet?.thumbnails?.default?.url
+    })) || [];
+
+    res.json(videos);
+  } catch (error) {
+    console.error('YouTube API error:', error);
+    res.status(500).json({ error: 'Failed to fetch playlist data' });
+  }
+});
+
   app.get("/api/playlists/:id", async (req, res) => {
     const playlist = await storage.getPlaylist(parseInt(req.params.id));
     if (!playlist) return res.status(404).send("Playlist not found");

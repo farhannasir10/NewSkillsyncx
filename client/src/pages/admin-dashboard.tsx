@@ -44,7 +44,7 @@ export default function AdminDashboard() {
       title: "",
       description: "",
       playlistUrl: "",
-      videos: [{ id: "", title: "", duration: "", thumbnail: "" }],
+      videos: [],
       tags: [],
     },
   });
@@ -76,6 +76,53 @@ export default function AdminDashboard() {
       });
     },
   });
+
+  // Function to create an empty course with title and description only
+  const createEmptyCourse = (data: any) => {
+    // Create a course without videos initially
+    const courseData = {
+      ...data,
+      videos: [],
+      playlistUrl: '',
+      tags: data.tags || []
+    };
+
+    createPlaylistMutation.mutate(courseData, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/playlists"] });
+        toast({
+          title: "Success",
+          description: "Empty Playlist created successfully",
+        });
+        form.reset({
+          title: '',
+          description: '',
+          playlistUrl: '',
+          tags: [],
+          videos: []
+        });
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
+  };
+
+  // Initialize form
+  useEffect(() => {
+    form.reset({
+      title: "",
+      description: "",
+      playlistUrl: "",
+      tags: [],
+      videos: []
+    });
+  }, []);
+
 
   if (!user?.isAdmin) {
     return (
@@ -111,216 +158,244 @@ export default function AdminDashboard() {
                   onSubmit={form.handleSubmit((data) => createPlaylistMutation.mutate(data))}
                   className="space-y-6"
                 >
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Course Title</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Course Title</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="playlistUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>YouTube Playlist URL</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="https://www.youtube.com/playlist?list=..."
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="playlistUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>YouTube Playlist URL</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="https://www.youtube.com/playlist?list=..."
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tags (comma-separated)</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value?.join(", ")}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value
-                                .split(",")
-                                .map((tag) => tag.trim())
-                                .filter(Boolean)
-                            )
-                          }
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tags (comma-separated)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value?.join(", ")}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  .split(",")
+                                  .map((tag) => tag.trim())
+                                  .filter(Boolean)
+                              )
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                <Button type="submit" className="w-full">
-                  Create Course
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Manage Videos</CardTitle>
-            <p className="text-sm text-muted-foreground">Add videos to existing courses</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Course</label>
-                <select 
-                  className="w-full p-2 border rounded-md"
-                  onChange={(e) => {
-                    // Fetch course videos and load them for editing
-                    if (e.target.value) {
-                      fetch(`/api/playlists/${e.target.value}`)
-                        .then(res => res.json())
-                        .then(playlist => {
-                          // Set form values based on selected playlist
-                          form.setValue('videos', playlist.videos || []);
-                        })
-                        .catch(console.error);
-                    }
-                  }}
-                >
-                  <option value="">Select a course</option>
-                  {playlists.map(playlist => (
-                    <option key={playlist.id} value={playlist.id}>
-                      {playlist.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <label className="text-sm font-medium">Videos</label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      form.setValue("videos", [
-                        ...form.watch("videos"),
-                        { id: "", title: "" },
-                      ])
-                    }
-                  >
-                    Add Video
-                  </Button>
-                </div>
-                
-                {form.watch("videos")?.map((_, index) => (
-                  <div key={index} className="p-4 border rounded-md space-y-4">
-                    <FormField
-                      control={form.control}
-                      name={`videos.${index}.id`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>YouTube Video ID</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              placeholder="e.g. dQw4w9WgXcQ (from youtube.com/watch?v=dQw4w9WgXcQ)"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name={`videos.${index}.title`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Video Title</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    
+                  <div className="flex space-x-4">
                     <Button
                       type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        const videos = form.watch("videos");
-                        form.setValue(
-                          "videos",
-                          videos.filter((_, i) => i !== index)
-                        );
-                      }}
+                      className="flex-1"
+                      onClick={() => createEmptyCourse(form.getValues())}
+                      disabled={createPlaylistMutation.isLoading}
                     >
-                      Remove
+                      {createPlaylistMutation.isLoading ? (
+                        <div className="flex items-center">
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+                          Creating...
+                        </div>
+                      ) : (
+                        "Create Empty Course"
+                      )}
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1"
+                      disabled={createPlaylistMutation.isLoading}
+                    >
+                      {createPlaylistMutation.isLoading ? (
+                        <div className="flex items-center">
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+                          Creating...
+                        </div>
+                      ) : (
+                        "Create from YouTube"
+                      )}
                     </Button>
                   </div>
-                ))}
-                
-                <Button
-                  type="button"
-                  onClick={() => {
-                    // Save videos to the selected course
-                    const select = document.querySelector('select') as HTMLSelectElement;
-                    const courseId = select?.value;
-                    
-                    if (!courseId) {
-                      return alert('Please select a course');
-                    }
-                    
-                    fetch(`/api/playlists/${courseId}`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ videos: form.watch('videos') }),
-                      credentials: 'include',
-                    })
-                    .then(res => {
-                      if (!res.ok) throw new Error('Failed to update videos');
-                      return res.json();
-                    })
-                    .then(() => {
-                      alert('Videos updated successfully');
-                    })
-                    .catch(err => {
-                      alert(err.message);
-                    });
-                  }}
-                >
-                  Save Videos
-                </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Manage Videos</CardTitle>
+              <p className="text-sm text-muted-foreground">Add videos to existing courses</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Course</label>
+                  <select
+                    className="w-full p-2 border rounded-md"
+                    onChange={(e) => {
+                      // Fetch course videos and load them for editing
+                      if (e.target.value) {
+                        fetch(`/api/playlists/${e.target.value}`)
+                          .then(res => res.json())
+                          .then(playlist => {
+                            // Set form values based on selected playlist
+                            form.setValue('videos', playlist.videos || []);
+                          })
+                          .catch(console.error);
+                      }
+                    }}
+                  >
+                    <option value="">Select a course</option>
+                    {playlists.map(playlist => (
+                      <option key={playlist.id} value={playlist.id}>
+                        {playlist.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-medium">Videos</label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        form.setValue("videos", [
+                          ...(form.watch("videos") || []),
+                          { id: "", title: "" },
+                        ])
+                      }
+                    >
+                      Add Video
+                    </Button>
+                  </div>
+
+                  {(form.watch("videos") || []).map((_, index) => (
+                    <div key={index} className="p-4 border rounded-md space-y-4">
+                      <FormField
+                        control={form.control}
+                        name={`videos.${index}.id`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>YouTube Video ID</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="e.g. dQw4w9WgXcQ (from youtube.com/watch?v=dQw4w9WgXcQ)"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name={`videos.${index}.title`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Video Title</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          const videos = form.watch("videos");
+                          form.setValue(
+                            "videos",
+                            videos.filter((_, i) => i !== index)
+                          );
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      // Save videos to the selected course
+                      const select = document.querySelector('select') as HTMLSelectElement;
+                      const courseId = select?.value;
+
+                      if (!courseId) {
+                        return alert('Please select a course');
+                      }
+
+                      fetch(`/api/playlists/${courseId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ videos: form.watch('videos') }),
+                        credentials: 'include',
+                      })
+                        .then(res => {
+                          if (!res.ok) throw new Error('Failed to update videos');
+                          return res.json();
+                        })
+                        .then(() => {
+                          alert('Videos updated successfully');
+                        })
+                        .catch(err => {
+                          alert(err.message);
+                        });
+                    }}
+                  >
+                    Save Videos
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  </div>
   );
 }

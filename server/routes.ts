@@ -108,6 +108,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendStatus(200);
   });
 
+  app.put("/api/playlists/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.user?.isAdmin) return res.sendStatus(403);
+
+    try {
+      const playlist = await storage.getPlaylist(parseInt(req.params.id));
+      if (!playlist) return res.status(404).send("Playlist not found");
+
+      // Update videos
+      if (req.body.videos) {
+        playlist.videos = req.body.videos;
+      }
+
+      // Update other fields if needed
+      const updatedPlaylist = await storage.updatePlaylist(playlist);
+      res.json(updatedPlaylist);
+    } catch (error) {
+      console.error("Failed to update playlist:", error);
+      res.status(500).json({ error: "Failed to update playlist" });
+    }
+  });
+
   app.get("/api/progress/:playlistId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const progress = await storage.getProgress(

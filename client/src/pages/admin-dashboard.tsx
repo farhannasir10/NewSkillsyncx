@@ -12,6 +12,7 @@ import { queryClient } from "@/lib/queryClient";
 import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { useEffect, useState } from "react";
 
 const videoSchema = z.object({
   id: z.string().min(1, "Video ID is required"),
@@ -20,13 +21,22 @@ const videoSchema = z.object({
 });
 
 const createPlaylistSchema = insertPlaylistSchema.extend({
-  videos: z.array(videoSchema).min(1, "At least one video is required"),
+  videos: z.array(videoSchema).default([]),
   playlistUrl: z.string().url("Please enter a valid YouTube playlist URL"),
 });
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+
+  // Fetch playlists on component mount
+  useEffect(() => {
+    fetch("/api/playlists")
+      .then(res => res.json())
+      .then(data => setPlaylists(data))
+      .catch(error => console.error("Failed to fetch playlists:", error));
+  }, []);
 
   const form = useForm({
     resolver: zodResolver(createPlaylistSchema),
@@ -90,16 +100,17 @@ export default function AdminDashboard() {
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Create New Course</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit((data) => createPlaylistMutation.mutate(data))}
-                className="space-y-6"
-              >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Create New Course</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit((data) => createPlaylistMutation.mutate(data))}
+                  className="space-y-6"
+                >
                 <FormField
                   control={form.control}
                   name="title"
@@ -136,76 +147,11 @@ export default function AdminDashboard() {
                         <Input 
                           {...field} 
                           placeholder="https://www.youtube.com/playlist?list=..."
-                          onChange={(e) => {
-                            field.onChange(e);
-                            // Extract playlist ID
-                            let playlistId;
-                            try {
-                              const url = new URL(e.target.value);
-                              playlistId = url.searchParams.get('list');
-                              if (!playlistId) {
-                                // Try extracting from other URL formats
-                                const matches = e.target.value.match(/(?:list=)([a-zA-Z0-9_-]+)/i);
-                                playlistId = matches ? matches[1] : null;
-                              }
-                            } catch {
-                              // If URL parsing fails, try direct regex match
-                              const matches = e.target.value.match(/(?:list=)([a-zA-Z0-9_-]+)/i);
-                              playlistId = matches ? matches[1] : null;
-                            }
-                            if (playlistId) {
-                              // Fetch video details from playlist
-                              fetch(`/api/youtube/playlist/${playlistId}`)
-                                .then(res => res.json())
-                                .then(videos => {
-                                  form.setValue('videos', videos.map((video: any) => ({
-                                    id: video.id,
-                                    title: video.title,
-                                    duration: video.duration || '',
-                                    thumbnail: video.thumbnail
-                                  })));
-                                })
-                                .catch(console.error);
-                            }
-                          }}
                         />
                       </FormControl>
                     </FormItem>
                   )}
                 />
-
-                <div className="space-y-4">
-                  <label className="text-sm font-medium">Videos</label>
-                  {form.watch("videos")?.map((_, index) => (
-                    <div key={index} className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name={`videos.${index}.title`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Video Title</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                      form.setValue("videos", [
-                        ...form.watch("videos"),
-                        { id: "", title: "" },
-                      ])
-                    }
-                  >
-                    Add Video
-                  </Button>
-                </div>
 
                 <FormField
                   control={form.control}
@@ -238,7 +184,143 @@ export default function AdminDashboard() {
             </Form>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Manage Videos</CardTitle>
+            <p className="text-sm text-muted-foreground">Add videos to existing courses</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Course</label>
+                <select 
+                  className="w-full p-2 border rounded-md"
+                  onChange={(e) => {
+                    // Fetch course videos and load them for editing
+                    if (e.target.value) {
+                      fetch(`/api/playlists/${e.target.value}`)
+                        .then(res => res.json())
+                        .then(playlist => {
+                          // Set form values based on selected playlist
+                          form.setValue('videos', playlist.videos || []);
+                        })
+                        .catch(console.error);
+                    }
+                  }}
+                >
+                  <option value="">Select a course</option>
+                  {playlists.map(playlist => (
+                    <option key={playlist.id} value={playlist.id}>
+                      {playlist.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Videos</label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      form.setValue("videos", [
+                        ...form.watch("videos"),
+                        { id: "", title: "" },
+                      ])
+                    }
+                  >
+                    Add Video
+                  </Button>
+                </div>
+                
+                {form.watch("videos")?.map((_, index) => (
+                  <div key={index} className="p-4 border rounded-md space-y-4">
+                    <FormField
+                      control={form.control}
+                      name={`videos.${index}.id`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>YouTube Video ID</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="e.g. dQw4w9WgXcQ (from youtube.com/watch?v=dQw4w9WgXcQ)"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`videos.${index}.title`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Video Title</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        const videos = form.watch("videos");
+                        form.setValue(
+                          "videos",
+                          videos.filter((_, i) => i !== index)
+                        );
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                
+                <Button
+                  type="button"
+                  onClick={() => {
+                    // Save videos to the selected course
+                    const select = document.querySelector('select') as HTMLSelectElement;
+                    const courseId = select?.value;
+                    
+                    if (!courseId) {
+                      return alert('Please select a course');
+                    }
+                    
+                    fetch(`/api/playlists/${courseId}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ videos: form.watch('videos') }),
+                      credentials: 'include',
+                    })
+                    .then(res => {
+                      if (!res.ok) throw new Error('Failed to update videos');
+                      return res.json();
+                    })
+                    .then(() => {
+                      alert('Videos updated successfully');
+                    })
+                    .catch(err => {
+                      alert(err.message);
+                    });
+                  }}
+                >
+                  Save Videos
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
+  </div>
   );
 }

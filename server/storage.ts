@@ -130,6 +130,15 @@ export class DatabaseStorage implements IStorage {
     await db.delete(playlists).where(eq(playlists.id, id));
   }
 
+  async updatePlaylist(playlist: Playlist): Promise<Playlist> {
+    const [updatedPlaylist] = await db
+      .update(playlists)
+      .set(playlist)
+      .where(eq(playlists.id, playlist.id))
+      .returning();
+    return updatedPlaylist;
+  }
+
   async getProgress(userId: number, playlistId: number): Promise<Progress | undefined> {
     const [userProgress] = await db
       .select()

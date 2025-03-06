@@ -190,18 +190,7 @@ export default function AdminDashboard() {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name={`videos.${index}.thumbnail`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Thumbnail URL</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                      
                     </div>
                   ))}
                   <Button
@@ -210,7 +199,7 @@ export default function AdminDashboard() {
                     onClick={() =>
                       form.setValue("videos", [
                         ...form.watch("videos"),
-                        { id: "", title: "", thumbnail: "" },
+                        { id: "", title: "" },
                       ])
                     }
                   >

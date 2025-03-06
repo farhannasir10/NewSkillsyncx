@@ -177,19 +177,7 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   <label className="text-sm font-medium">Videos</label>
                   {form.watch("videos")?.map((_, index) => (
-                    <div key={index} className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name={`videos.${index}.id`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>YouTube Video ID</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                    <div key={index} className="space-y-4">
                       <FormField
                         control={form.control}
                         name={`videos.${index}.title`}
@@ -204,10 +192,10 @@ export default function AdminDashboard() {
                       />
                       <FormField
                         control={form.control}
-                        name={`videos.${index}.duration`}
+                        name={`videos.${index}.thumbnail`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Duration (e.g. "1:30:00")</FormLabel>
+                            <FormLabel>Thumbnail URL</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
@@ -222,7 +210,7 @@ export default function AdminDashboard() {
                     onClick={() =>
                       form.setValue("videos", [
                         ...form.watch("videos"),
-                        { id: "", title: "", duration: "", thumbnail: "" },
+                        { id: "", title: "", thumbnail: "" },
                       ])
                     }
                   >

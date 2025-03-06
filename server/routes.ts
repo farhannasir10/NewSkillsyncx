@@ -21,24 +21,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/youtube/playlist/:playlistId", async (req, res) => {
     try {
       const playlistId = req.params.playlistId;
-      const response = await youtube.playlistItems.list({
-        key: process.env.YOUTUBE_API_KEY,
+      
+      // Get playlist items (videos)
+      const playlistResponse = await youtube.playlistItems.list({
         part: ['snippet', 'contentDetails'],
         playlistId: playlistId,
         maxResults: 50
       });
 
-      if (!response.data.items || response.data.items.length === 0) {
+      if (!playlistResponse.data.items || playlistResponse.data.items.length === 0) {
         return res.status(404).json({ error: 'No videos found in playlist' });
       }
 
-      const videos = response.data.items?.map(item => {
-        const videoId = item.snippet?.resourceId?.videoId;
+      // Extract video IDs to get duration information
+      const videoIds = playlistResponse.data.items
+        .map(item => item.snippet?.resourceId?.videoId)
+        .filter(id => id);
+
+      // Get video details including duration
+      const videoDetailsResponse = await youtube.videos.list({
+        part: ['contentDetails', 'snippet'],
+        id: videoIds
+      });
+
+      // Create a map of video durations
+      const durationMap = new Map();
+      if (videoDetailsResponse.data.items) {
+        videoDetailsResponse.data.items.forEach(video => {
+          if (video.id && video.contentDetails?.duration) {
+            // Convert ISO 8601 duration to readable format
+            const duration = video.contentDetails.duration
+              .replace('PT', '')
+              .replace('H', 'h ')
+              .replace('M', 'm ')
+              .replace('S', 's');
+            durationMap.set(video.id, duration);
+          }
+        });
+      }
+
+      // Map playlist items to our video format
+      const videos = playlistResponse.data.items?.map(item => {
+        const videoId = item.snippet?.resourceId?.videoId || '';
         return {
-          id: videoId || '',
+          id: videoId,
           title: item.snippet?.title || 'Untitled Video',
           thumbnail: item.snippet?.thumbnails?.medium?.url || '',
-          duration: durationMap.get(videoId) || ''
+          duration: durationMap.get(videoId) || 'Unknown'
         };
       }).filter(video => video.id && video.title);
 

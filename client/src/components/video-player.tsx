@@ -19,6 +19,18 @@ declare global {
   }
 }
 
+const getYouTubeErrorMessage = (errorCode: number): string => {
+  const errors: Record<number, string> = {
+    2: "This video ID is invalid. Please check the video ID and try again.",
+    5: "HTML5 player error. Please try refreshing the page.",
+    100: "This video was not found or has been removed from YouTube.",
+    101: "This video cannot be played in an embedded player.",
+    150: "This video cannot be played in an embedded player.",
+  };
+  return errors[errorCode] || "An error occurred while playing the video. Please try again.";
+};
+
+
 export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const [generatedNotes, setGeneratedNotes] = useState<string>("");
@@ -101,17 +113,8 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
   });
 
   useEffect(() => {
-    // Load YouTube API
-    if (!window.YT) {
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      const firstScriptTag = document.getElementsByTagName("script")[0];
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-    }
-
     let player: any = null;
 
-    // Initialize player when API is ready
     const initializePlayer = () => {
       if (!playerContainerRef.current) return;
 
@@ -122,57 +125,53 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
       const playerElement = document.createElement("div");
       playerContainerRef.current.appendChild(playerElement);
 
-      try {
-        player = new window.YT.Player(playerElement, {
-          videoId,
-          height: "400",
-          width: "100%",
-          playerVars: {
-            autoplay: 0,
-            modestbranding: 1,
-            rel: 0,
-            playsinline: 1,
+      player = new window.YT.Player(playerElement, {
+        videoId: videoId,
+        height: '100%',
+        width: '100%',
+        playerVars: {
+          autoplay: 0,
+          rel: 0,
+          modestbranding: 1,
+        },
+        events: {
+          onReady: () => {
+            console.log("YouTube player ready");
           },
-          events: {
-            onReady: () => setPlayerError(""),
-            onStateChange: (event: any) => {
-              if (event.data === window.YT.PlayerState.ENDED) {
-                completeMutation.mutate();
-              }
-            },
-            onError: (event: any) => {
-              const errors: Record<number, string> = {
-                2: "This video ID is invalid. Please check the video ID and try again.",
-                5: "HTML5 player error. Please try refreshing the page.",
-                100: "This video was not found or has been removed from YouTube.",
-                101: "This video cannot be played in an embedded player.",
-                150: "This video cannot be played in an embedded player.",
-              };
-              setPlayerError(errors[event.data] || "An error occurred while playing the video. Please try again.");
-              console.error("YouTube player error:", event.data);
-            },
+          onStateChange: (event) => {
+            // When video ends (state = 0), mark as completed
+            if (event.data === 0) {
+              completeMutation.mutate();
+            }
           },
-        });
-      } catch (error) {
-        console.error("Error initializing player:", error);
-        setPlayerError("Failed to initialize video player");
-      }
+          onError: (event) => {
+            console.error("YouTube player error:", event.data);
+            setPlayerError(getYouTubeErrorMessage(event.data));
+          }
+        }
+      });
     };
 
-    // Create or update player when API is ready
-    if (window.YT && window.YT.Player) {
-      initializePlayer();
-    } else {
+    // Load YouTube API if it's not already loaded
+    if (!window.YT) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName("script")[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+      // Set global callback for when YouTube API is ready
       window.onYouTubeIframeAPIReady = initializePlayer;
+    } else if (window.YT.Player) {
+      // If API is already loaded, initialize player directly
+      initializePlayer();
     }
 
-    // Cleanup
     return () => {
-      if (playerContainerRef.current) {
-        playerContainerRef.current.innerHTML = "";
+      if (player) {
+        player.destroy();
       }
     };
-  }, [videoId]);
+  }, [videoId, playlistId, completeMutation]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

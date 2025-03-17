@@ -93,11 +93,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     if (!req.user?.isAdmin) return res.sendStatus(403);
 
-    const playlist = await storage.createPlaylist({
-      ...req.body,
-      creatorId: req.user.id
-    });
-    res.status(201).json(playlist);
+    try {
+      const { playlistUrl } = req.body;
+      const playlistId = playlistUrl.split('list=')[1]?.split('&')[0];
+      
+      if (!playlistId) {
+        return res.status(400).json({ error: 'Invalid playlist URL' });
+      }
+
+      // Get playlist details
+      const playlistResponse = await youtube.playlistItems.list({
+        part: ['snippet', 'contentDetails'],
+        playlistId: playlistId,
+        maxResults: 50
+      });
+
+      if (!playlistResponse.data.items) {
+        return res.status(404).json({ error: 'No videos found in playlist' });
+      }
+
+      // Map videos to our format
+      const videos = playlistResponse.data.items.map(item => ({
+        id: item.snippet?.resourceId?.videoId || '',
+        title: item.snippet?.title || '',
+        thumbnail: item.snippet?.thumbnails?.medium?.url || '',
+      })).filter(video => video.id && video.title);
+
+      const playlist = await storage.createPlaylist({
+        ...req.body,
+        videos,
+        creatorId: req.user.id
+      });
+      
+      res.status(201).json(playlist);
+    } catch (error) {
+      console.error('YouTube API error:', error);
+      const message = error.response?.data?.error?.message || 'Failed to fetch playlist';
+      res.status(500).json({ error: message });
+    }
   });
 
   app.delete("/api/playlists/:id", async (req, res) => {

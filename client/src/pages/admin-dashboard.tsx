@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPlaylistSchema, InsertUser, Playlist } from "@shared/schema";
@@ -196,6 +196,9 @@ export default function AdminDashboard() {
                             placeholder="https://www.youtube.com/playlist?list=..."
                           />
                         </FormControl>
+                        <FormDescription>
+                          Enter the URL of a YouTube playlist to import all videos.  {/* Future enhancement: Add video fetching and display here */}
+                        </FormDescription>
                       </FormItem>
                     )}
                   />

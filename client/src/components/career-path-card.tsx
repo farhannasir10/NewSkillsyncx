@@ -11,7 +11,7 @@ interface CareerPathCardProps {
   };
 }
 
-export function CareerPathCard({ path }: CareerPathCardProps) {
+const CareerPathCard = ({ path }: CareerPathCardProps) => {
   return (
     <Card className="h-full hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -45,4 +45,6 @@ export function CareerPathCard({ path }: CareerPathCardProps) {
       </CardContent>
     </Card>
   );
-}
+};
+
+export default CareerPathCard;

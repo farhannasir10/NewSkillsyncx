@@ -67,9 +67,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a map of video durations
       const durationMap = new Map();
       batches.forEach(video => {
-          if (video.id && video.contentDetails?.duration) {
-            // Convert ISO 8601 duration to readable format
-            const duration = video.contentDetails.duration
+        if (video.id && video.contentDetails?.duration) {
+          // Convert ISO 8601 duration to readable format
+          const duration = video.contentDetails.duration
+            .replace('PT', '')
+            .replace('H', 'h ')
+            .replace('M', 'm ')
+            .replace('S', 's');
+          durationMap.set(video.id, duration);
+        }
+      });
               .replace('PT', '')
               .replace('H', 'h ')
               .replace('M', 'm ')

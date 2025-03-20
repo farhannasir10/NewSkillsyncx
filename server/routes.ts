@@ -7,7 +7,7 @@ import { google } from 'googleapis';
 
 const youtube = google.youtube({
   version: 'v3',
-  auth: process.env.YOUTUBE_API_KEY
+  auth: 'AIzaSyDSn-suGuS8h2enE3hUXNEMnLL0Zl2b3R8'
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {

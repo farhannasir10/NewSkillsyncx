@@ -156,6 +156,12 @@ export default function AdminDashboard() {
     );
   }
 
+  const generateNotes = (videoId: string) => {
+    //Implementation to generate notes for a video.  This is a placeholder.
+    console.log("Generating notes for video:", videoId);
+    //Add your actual note generation logic here.  This might involve an API call.
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -275,18 +281,23 @@ export default function AdminDashboard() {
                 </form>
               </Form>
               {form.watch("videos")?.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4">Videos</h3>
-                  <div className="space-y-4">
+                <div className="space-y-4 mt-4">
+                  <h3 className="text-lg font-medium">Videos in Playlist</h3>
+                  <select 
+                    className="w-full p-2 border rounded-md"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        generateNotes(e.target.value);
+                      }
+                    }}
+                  >
+                    <option value="">Select a video to generate notes</option>
                     {form.watch("videos").map((video: any, index: number) => (
-                      <div key={video.id} className="flex items-center justify-between p-4 border rounded">
-                        <span>{video.title}</span>
-                        <Button type="button" variant="outline">
-                          Generate Notes
-                        </Button>
-                      </div>
+                      <option key={index} value={video.id}>
+                        {video.title}
+                      </option>
                     ))}
-                  </div>
+                  </select>
                 </div>
               )}
             </CardContent>

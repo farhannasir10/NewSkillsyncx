@@ -2,6 +2,17 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+
+router.get("/api/career-paths", async (req, res) => {
+  try {
+    const paths = await db.select().from(careerPaths);
+    res.json(paths);
+  } catch (error) {
+    console.error("Error fetching career paths:", error);
+    res.status(500).json({ error: "Failed to fetch career paths" });
+  }
+});
+
 import { generateVideoNotes } from "./services/ai";
 import { google } from 'googleapis';
 

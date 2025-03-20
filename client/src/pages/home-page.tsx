@@ -1,13 +1,14 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { Playlist, Post } from "@shared/schema";
+import { Playlist, Post, CareerPath } from "@shared/schema";
 import PlaylistCard from "@/components/playlist-card";
 import { Button } from "@/components/ui/button";
 import XPBadge from "@/components/xp-badge";
 import { Link } from "wouter";
 import { LogOut, Plus, Rocket, Trophy, Users } from "lucide-react";
+import CareerPathCard from "@/components/career-path-card"; // Assuming this component exists
 
-export default function HomePage() {
+const HomePage = () => {
   const { user, logoutMutation } = useAuth();
 
   const { data: playlists } = useQuery<Playlist[]>({
@@ -16,6 +17,11 @@ export default function HomePage() {
 
   const { data: posts } = useQuery<Post[]>({
     queryKey: ["/api/posts"],
+  });
+
+  const { data: careerPaths } = useQuery<CareerPath[]>({
+    queryKey: ["careerPaths"],
+    queryFn: () => fetch("/api/career-paths").then(res => res.json())
   });
 
   return (
@@ -157,4 +163,6 @@ export default function HomePage() {
       </main>
     </div>
   );
-}
+};
+
+export default HomePage;

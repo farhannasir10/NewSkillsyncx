@@ -248,7 +248,12 @@ export const storage = new DatabaseStorage();
   try {
     const paths = await db.select().from(careerPaths);
     if (paths.length === 0) {
-      await db.insert(careerPaths).values(defaultCareerPaths);
+      await db.insert(careerPaths).values(defaultCareerPaths.map(path => ({
+        ...path,
+        requiredSkills: JSON.stringify(path.requiredSkills),
+        roadmap: JSON.stringify(path.roadmap),
+        createdAt: new Date()
+      })));
       console.log("Career paths initialized");
     }
   } catch (error) {

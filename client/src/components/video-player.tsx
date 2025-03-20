@@ -57,28 +57,36 @@ export const VideoPlayer = ({ videoId, playlistId }: VideoPlayerProps) => {
     mutationFn: async () => {
       // Unique mock transcripts based on videoId
       // Get unique transcript based on video ID
-      const mockTranscripts: Record<string, string> = {
-        [videoId]: `
-          ${videoId} Content Overview
-          - Introduction to key concepts
-          - Technical implementation details
-          - Best practices and patterns
-          - Common challenges and solutions
-          - Hands-on coding examples
-          - Performance optimization tips
-          - Integration with other features
-          - Testing and debugging strategies
-          - Production deployment considerations
-          - Advanced use cases and scenarios`
-      };
-
-      const transcript = mockTranscripts[videoId] || `
-        Video Content Overview for ${videoId}:
-        - Key concepts and principles
-        - Implementation strategies
-        - Best practices and patterns
-        - Common pitfalls to avoid
-        - Practical examples and exercises
+      // Generate unique mock transcript based on video title and ID
+      const topics = [
+        "Web Development", "Data Structures", "Algorithms", 
+        "Machine Learning", "DevOps", "Mobile Development",
+        "Cloud Computing", "Security", "Database Design"
+      ];
+      
+      const selectedTopic = topics[Math.floor(Math.random() * topics.length)];
+      const transcript = `
+        ${selectedTopic} Tutorial - ${videoId}
+        
+        Chapter 1: Core Concepts
+        - Understanding ${selectedTopic} fundamentals
+        - Key principles and architecture
+        - Modern development practices
+        
+        Chapter 2: Implementation
+        - Step-by-step guide for ${selectedTopic}
+        - Common design patterns
+        - Performance optimization techniques
+        
+        Chapter 3: Advanced Topics
+        - Industry best practices
+        - Integration strategies
+        - Scalability considerations
+        
+        Chapter 4: Practical Examples
+        - Real-world use cases
+        - Code demonstrations
+        - Troubleshooting tips
       `;
 
       const res = await fetch("/api/notes/generate", {

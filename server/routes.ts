@@ -77,14 +77,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           durationMap.set(video.id, duration);
         }
       });
-              .replace('PT', '')
-              .replace('H', 'h ')
-              .replace('M', 'm ')
-              .replace('S', 's');
-            durationMap.set(video.id, duration);
-          }
-        });
-      }
 
       // Map playlist items to our video format
       const videos = allItems?.map(item => {

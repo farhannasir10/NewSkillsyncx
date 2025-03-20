@@ -1,7 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { Router } from "express";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import { db } from "./db";
+import { careerPaths } from "@shared/schema";
+
+const router = Router();
 
 router.get("/api/career-paths", async (req, res) => {
   try {
@@ -23,6 +28,7 @@ const youtube = google.youtube({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+  app.use(router);
 
   app.get("/api/playlists", async (req, res) => {
     const playlists = await storage.getPlaylists();

@@ -193,50 +193,101 @@ export class DatabaseStorage implements IStorage {
 const defaultCareerPaths = [
   {
     title: "MERN Stack Developer",
-    description: "Master the MERN (MongoDB, Express, React, Node.js) stack and build full-stack web applications",
-    requiredSkills: ["JavaScript", "React", "Node.js", "MongoDB", "Express.js"],
+    description: "Master the MERN stack (MongoDB, Express, React, Node.js) for modern web applications",
+    requiredSkills: ["JavaScript", "React", "Node.js", "MongoDB"],
     roadmap: [
-      { stage: "Fundamentals", skills: ["HTML", "CSS", "JavaScript Basics", "Git"] },
+      { stage: "Fundamentals", skills: ["HTML", "CSS", "JavaScript", "Git"] },
       { stage: "Frontend", skills: ["React", "Redux", "Material UI/Tailwind"] },
       { stage: "Backend", skills: ["Node.js", "Express.js", "REST APIs"] },
-      { stage: "Database", skills: ["MongoDB", "Mongoose", "Database Design"] },
-      { stage: "DevOps", skills: ["Docker", "CI/CD", "AWS Basics"] }
+      { stage: "Database", skills: ["MongoDB", "Mongoose", "Database Design"] }
     ]
   },
   {
-    title: "Software Engineer",
-    description: "Comprehensive software engineering path covering fundamentals to advanced concepts",
-    requiredSkills: ["Data Structures", "Algorithms", "System Design", "Programming Languages"],
+    title: "Python Full-Stack Developer",
+    description: "Build web applications using Python, Django, and modern frontend technologies",
+    requiredSkills: ["Python", "Django", "JavaScript", "SQL"],
     roadmap: [
-      { stage: "Programming Basics", skills: ["Python", "Java", "Data Structures"] },
-      { stage: "Software Design", skills: ["OOP", "Design Patterns", "Clean Code"] },
-      { stage: "Web Development", skills: ["Full Stack Development", "APIs"] },
-      { stage: "Advanced Topics", skills: ["System Design", "Scalability", "Security"] },
-      { stage: "Best Practices", skills: ["Testing", "Code Review", "Documentation"] }
+      { stage: "Basics", skills: ["Python", "HTML/CSS", "JavaScript"] },
+      { stage: "Backend", skills: ["Django", "DRF", "PostgreSQL"] },
+      { stage: "Frontend", skills: ["React", "TypeScript", "Redux"] },
+      { stage: "Advanced", skills: ["AWS", "Docker", "CI/CD"] }
     ]
   },
   {
-    title: "AI/ML Developer",
-    description: "Learn artificial intelligence and machine learning from basics to advanced applications",
-    requiredSkills: ["Python", "Mathematics", "Machine Learning", "Deep Learning"],
+    title: "Java Enterprise Developer",
+    description: "Enterprise-level development with Java and Spring ecosystem",
+    requiredSkills: ["Java", "Spring", "SQL", "Maven"],
     roadmap: [
-      { stage: "Prerequisites", skills: ["Python", "Statistics", "Linear Algebra"] },
-      { stage: "ML Fundamentals", skills: ["Scikit-learn", "Data Processing", "Model Evaluation"] },
-      { stage: "Deep Learning", skills: ["TensorFlow", "Neural Networks", "Computer Vision"] },
-      { stage: "Advanced ML", skills: ["NLP", "Reinforcement Learning", "MLOps"] },
-      { stage: "Projects", skills: ["Real-world Applications", "Model Deployment"] }
+      { stage: "Core", skills: ["Java", "OOP", "Data Structures"] },
+      { stage: "Framework", skills: ["Spring Boot", "Spring Security", "JPA"] },
+      { stage: "Database", skills: ["MySQL", "Hibernate", "Redis"] },
+      { stage: "Tools", skills: ["Maven", "Jenkins", "JUnit"] }
+    ]
+  },
+  {
+    title: "Unity Game Developer",
+    description: "Create immersive games using Unity and C#",
+    requiredSkills: ["C#", "Unity", "3D Mathematics", "Game Design"],
+    roadmap: [
+      { stage: "Fundamentals", skills: ["C#", "Unity Basics", "2D Games"] },
+      { stage: "Graphics", skills: ["3D Modeling", "Animation", "Shaders"] },
+      { stage: "Systems", skills: ["Physics", "AI", "Networking"] },
+      { stage: "Polish", skills: ["UI/UX", "Audio", "Optimization"] }
+    ]
+  },
+  {
+    title: "Mobile App Developer",
+    description: "Build cross-platform mobile applications using React Native",
+    requiredSkills: ["JavaScript", "React Native", "Mobile Design", "APIs"],
+    roadmap: [
+      { stage: "Basics", skills: ["JavaScript", "React", "Mobile UI"] },
+      { stage: "Native", skills: ["React Native", "Navigation", "State Management"] },
+      { stage: "Features", skills: ["Native APIs", "Push Notifications", "Storage"] },
+      { stage: "Deployment", skills: ["App Store", "Play Store", "CI/CD"] }
+    ]
+  },
+  {
+    title: "AI/ML Engineer",
+    description: "Master artificial intelligence and machine learning",
+    requiredSkills: ["Python", "Mathematics", "ML Algorithms", "Deep Learning"],
+    roadmap: [
+      { stage: "Foundation", skills: ["Python", "Stats", "Linear Algebra"] },
+      { stage: "ML", skills: ["Scikit-learn", "Pandas", "Model Training"] },
+      { stage: "Deep Learning", skills: ["TensorFlow", "PyTorch", "CNNs"] },
+      { stage: "Advanced", skills: ["NLP", "Computer Vision", "MLOps"] }
     ]
   },
   {
     title: "DevOps Engineer",
-    description: "Master the tools and practices of modern DevOps and cloud infrastructure",
-    requiredSkills: ["Linux", "Cloud Platforms", "CI/CD", "Infrastructure as Code"],
+    description: "Implement and maintain CI/CD pipelines and cloud infrastructure",
+    requiredSkills: ["Linux", "Cloud", "CI/CD", "Containers"],
     roadmap: [
-      { stage: "Fundamentals", skills: ["Linux", "Networking", "Shell Scripting"] },
-      { stage: "Cloud & Containers", skills: ["AWS/Azure", "Docker", "Kubernetes"] },
-      { stage: "Automation", skills: ["CI/CD", "Jenkins", "GitHub Actions"] },
-      { stage: "Infrastructure", skills: ["Terraform", "Ansible", "Monitoring"] },
-      { stage: "Security", skills: ["DevSecOps", "Security Tools", "Best Practices"] }
+      { stage: "Basics", skills: ["Linux", "Networking", "Shell Scripting"] },
+      { stage: "Cloud", skills: ["AWS", "Azure", "GCP"] },
+      { stage: "Tools", skills: ["Docker", "Kubernetes", "Terraform"] },
+      { stage: "Practices", skills: ["CI/CD", "Monitoring", "Security"] }
+    ]
+  },
+  {
+    title: "Blockchain Developer",
+    description: "Develop decentralized applications and smart contracts",
+    requiredSkills: ["Solidity", "Web3.js", "Blockchain", "JavaScript"],
+    roadmap: [
+      { stage: "Basics", skills: ["Blockchain Theory", "Cryptography", "JavaScript"] },
+      { stage: "Smart Contracts", skills: ["Solidity", "Truffle", "Web3.js"] },
+      { stage: "DApps", skills: ["React", "Ethers.js", "IPFS"] },
+      { stage: "Advanced", skills: ["Security", "Layer 2", "DeFi"] }
+    ]
+  },
+  {
+    title: "Cloud Solutions Architect",
+    description: "Design and implement scalable cloud solutions",
+    requiredSkills: ["Cloud Platforms", "System Design", "Security", "Networking"],
+    roadmap: [
+      { stage: "Foundation", skills: ["AWS/Azure", "Networking", "Security"] },
+      { stage: "Services", skills: ["Compute", "Storage", "Database"] },
+      { stage: "Architecture", skills: ["Microservices", "Serverless", "IaC"] },
+      { stage: "Enterprise", skills: ["Cost Optimization", "Compliance", "Migration"] }
     ]
   }
 ];

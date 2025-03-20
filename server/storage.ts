@@ -1,4 +1,4 @@
-import { User, InsertUser, Playlist, Progress, users, playlists, progress } from "@shared/schema";
+import { User, InsertUser, Playlist, Progress, users, playlists, progress, careerPaths } from "@shared/schema";
 import session from "express-session";
 import { db } from "./db";
 import { eq } from "drizzle-orm";

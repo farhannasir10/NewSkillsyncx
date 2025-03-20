@@ -88,9 +88,11 @@ const HomePage = () => {
                 Let AI guide your learning path from fundamentals to industry projects and interview preparation.
                 Get personalized course recommendations and mentorship to achieve your career goals.
               </p>
-              <Button size="lg">
-                Explore Career Paths
-              </Button>
+              <Link href="/career">
+                <Button size="lg">
+                  Explore Career Paths
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

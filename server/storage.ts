@@ -189,4 +189,69 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
+// Default career paths data
+const defaultCareerPaths = [
+  {
+    title: "MERN Stack Developer",
+    description: "Master the MERN (MongoDB, Express, React, Node.js) stack and build full-stack web applications",
+    requiredSkills: ["JavaScript", "React", "Node.js", "MongoDB", "Express.js"],
+    roadmap: [
+      { stage: "Fundamentals", skills: ["HTML", "CSS", "JavaScript Basics", "Git"] },
+      { stage: "Frontend", skills: ["React", "Redux", "Material UI/Tailwind"] },
+      { stage: "Backend", skills: ["Node.js", "Express.js", "REST APIs"] },
+      { stage: "Database", skills: ["MongoDB", "Mongoose", "Database Design"] },
+      { stage: "DevOps", skills: ["Docker", "CI/CD", "AWS Basics"] }
+    ]
+  },
+  {
+    title: "Software Engineer",
+    description: "Comprehensive software engineering path covering fundamentals to advanced concepts",
+    requiredSkills: ["Data Structures", "Algorithms", "System Design", "Programming Languages"],
+    roadmap: [
+      { stage: "Programming Basics", skills: ["Python", "Java", "Data Structures"] },
+      { stage: "Software Design", skills: ["OOP", "Design Patterns", "Clean Code"] },
+      { stage: "Web Development", skills: ["Full Stack Development", "APIs"] },
+      { stage: "Advanced Topics", skills: ["System Design", "Scalability", "Security"] },
+      { stage: "Best Practices", skills: ["Testing", "Code Review", "Documentation"] }
+    ]
+  },
+  {
+    title: "AI/ML Developer",
+    description: "Learn artificial intelligence and machine learning from basics to advanced applications",
+    requiredSkills: ["Python", "Mathematics", "Machine Learning", "Deep Learning"],
+    roadmap: [
+      { stage: "Prerequisites", skills: ["Python", "Statistics", "Linear Algebra"] },
+      { stage: "ML Fundamentals", skills: ["Scikit-learn", "Data Processing", "Model Evaluation"] },
+      { stage: "Deep Learning", skills: ["TensorFlow", "Neural Networks", "Computer Vision"] },
+      { stage: "Advanced ML", skills: ["NLP", "Reinforcement Learning", "MLOps"] },
+      { stage: "Projects", skills: ["Real-world Applications", "Model Deployment"] }
+    ]
+  },
+  {
+    title: "DevOps Engineer",
+    description: "Master the tools and practices of modern DevOps and cloud infrastructure",
+    requiredSkills: ["Linux", "Cloud Platforms", "CI/CD", "Infrastructure as Code"],
+    roadmap: [
+      { stage: "Fundamentals", skills: ["Linux", "Networking", "Shell Scripting"] },
+      { stage: "Cloud & Containers", skills: ["AWS/Azure", "Docker", "Kubernetes"] },
+      { stage: "Automation", skills: ["CI/CD", "Jenkins", "GitHub Actions"] },
+      { stage: "Infrastructure", skills: ["Terraform", "Ansible", "Monitoring"] },
+      { stage: "Security", skills: ["DevSecOps", "Security Tools", "Best Practices"] }
+    ]
+  }
+];
+
 export const storage = new DatabaseStorage();
+
+// Initialize career paths
+(async () => {
+  try {
+    const paths = await db.select().from(careerPaths);
+    if (paths.length === 0) {
+      await db.insert(careerPaths).values(defaultCareerPaths);
+      console.log("Career paths initialized");
+    }
+  } catch (error) {
+    console.error("Failed to initialize career paths:", error);
+  }
+})();

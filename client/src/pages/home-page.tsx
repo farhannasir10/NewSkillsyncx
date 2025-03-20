@@ -60,6 +60,16 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Career Paths Section */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-bold mb-6">Career Paths</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {careerPaths?.map((path) => (
+              <CareerPathCard key={path.id} path={path} />
+            ))}
+          </div>
+        </section>
+
         {/* Career Path Banner */}
         <section className="mb-12 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-8">
           <div className="flex items-start justify-between">

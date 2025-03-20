@@ -21,20 +21,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/youtube/playlist/:playlistId", async (req, res) => {
     try {
       const playlistId = req.params.playlistId;
-      
-      // Get playlist items (videos)
-      const playlistResponse = await youtube.playlistItems.list({
-        part: ['snippet', 'contentDetails'],
-        playlistId: playlistId,
-        maxResults: 50
-      });
 
-      if (!playlistResponse.data.items || playlistResponse.data.items.length === 0) {
+      // Fetch all videos using pagination
+      let allItems = [];
+      let nextPageToken = undefined;
+
+      do {
+        const playlistResponse = await youtube.playlistItems.list({
+          part: ['snippet', 'contentDetails'],
+          playlistId: playlistId,
+          maxResults: 50,
+          pageToken: nextPageToken
+        });
+
+        if (playlistResponse.data.items) {
+          allItems = [...allItems, ...playlistResponse.data.items];
+        }
+
+        nextPageToken = playlistResponse.data.nextPageToken;
+      } while (nextPageToken);
+
+
+      if (!allItems || allItems.length === 0) {
         return res.status(404).json({ error: 'No videos found in playlist' });
       }
 
       // Extract video IDs to get duration information
-      const videoIds = playlistResponse.data.items
+      const videoIds = allItems
         .map(item => item.snippet?.resourceId?.videoId)
         .filter(id => id);
 
@@ -61,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Map playlist items to our video format
-      const videos = playlistResponse.data.items?.map(item => {
+      const videos = allItems?.map(item => {
         const videoId = item.snippet?.resourceId?.videoId || '';
         return {
           id: videoId,
@@ -96,24 +109,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { playlistUrl } = req.body;
       const playlistId = playlistUrl.split('list=')[1]?.split('&')[0];
-      
+
       if (!playlistId) {
         return res.status(400).json({ error: 'Invalid playlist URL' });
       }
 
       // Get playlist details
-      const playlistResponse = await youtube.playlistItems.list({
-        part: ['snippet', 'contentDetails'],
-        playlistId: playlistId,
-        maxResults: 50
-      });
+      let allItems = [];
+      let nextPageToken = undefined;
 
-      if (!playlistResponse.data.items) {
+      do {
+        const playlistResponse = await youtube.playlistItems.list({
+          part: ['snippet', 'contentDetails'],
+          playlistId: playlistId,
+          maxResults: 50,
+          pageToken: nextPageToken
+        });
+
+        if (playlistResponse.data.items) {
+          allItems = [...allItems, ...playlistResponse.data.items];
+        }
+
+        nextPageToken = playlistResponse.data.nextPageToken;
+      } while (nextPageToken);
+
+      if (!allItems) {
         return res.status(404).json({ error: 'No videos found in playlist' });
       }
 
       // Map videos to our format
-      const videos = playlistResponse.data.items.map(item => ({
+      const videos = allItems.map(item => ({
         id: item.snippet?.resourceId?.videoId || '',
         title: item.snippet?.title || '',
         thumbnail: item.snippet?.thumbnails?.medium?.url || '',
@@ -124,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         videos,
         creatorId: req.user.id
       });
-      
+
       res.status(201).json(playlist);
     } catch (error) {
       console.error('YouTube API error:', error);

@@ -82,17 +82,28 @@ export default function PlaylistCard({ playlist, userId, showAdminActions }: Pla
             <Progress value={progressPercent} />
 
             <div className="space-y-2">
-              <select
-                onChange={(e) => setSelectedVideo(e.target.value)}
-                className="w-full p-2 border rounded-md bg-background"
-              >
-                <option value="">Select a video</option>
-                {(playlist.videos as Video[]).map((video) => (
-                  <option key={video.id} value={video.id}>
-                    {video.title} {progress?.completedVideos?.includes(video.id) ? '✓' : ''}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  onChange={(e) => setSelectedVideo(e.target.value)}
+                  className="w-full p-3 border rounded-lg bg-background appearance-none cursor-pointer hover:border-primary transition-colors text-sm font-medium"
+                >
+                  <option value="" className="text-muted-foreground">Choose a video to watch...</option>
+                  {(playlist.videos as Video[]).map((video, index) => (
+                    <option 
+                      key={video.id} 
+                      value={video.id}
+                      className="py-2"
+                    >
+                      {index + 1}. {video.title} {progress?.completedVideos?.includes(video.id) ? '✅' : ''}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" fill="none"/>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

@@ -82,20 +82,17 @@ export default function PlaylistCard({ playlist, userId, showAdminActions }: Pla
             <Progress value={progressPercent} />
 
             <div className="space-y-2">
-              {(playlist.videos as Video[]).map((video) => (
-                <button
-                  key={video.id}
-                  onClick={() => setSelectedVideo(video.id)}
-                  className="w-full text-left p-2 hover:bg-accent rounded-md flex items-center gap-2"
-                >
-                  <div className="w-4 h-4 rounded-full border-2 flex-shrink-0">
-                    {progress?.completedVideos?.includes(video.id) && (
-                      <div className="w-full h-full bg-primary rounded-full" />
-                    )}
-                  </div>
-                  <span className="truncate">{video.title}</span>
-                </button>
-              ))}
+              <select
+                onChange={(e) => setSelectedVideo(e.target.value)}
+                className="w-full p-2 border rounded-md bg-background"
+              >
+                <option value="">Select a video</option>
+                {(playlist.videos as Video[]).map((video) => (
+                  <option key={video.id} value={video.id}>
+                    {video.title} {progress?.completedVideos?.includes(video.id) ? '✓' : ''}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </CardContent>

@@ -51,10 +51,27 @@ export default function AdminDashboard() {
 
   const createPlaylistMutation = useMutation({
     mutationFn: async (data: any) => {
+      const playlistId = data.playlistUrl.split('list=')[1]?.split('&')[0];
+      if (!playlistId) {
+        throw new Error("Invalid playlist URL");
+      }
+
+      const videosRes = await fetch(`/api/youtube/playlist/${playlistId}`); //Requires backend API
+      if (!videosRes.ok) {
+        throw new Error("Failed to fetch playlist videos");
+      }
+      const videos = await videosRes.json();
+
       const res = await fetch("/api/playlists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, creatorId: user?.id }),
+        body: JSON.stringify({
+          ...data,
+          videos: videos.map((video: any) => ({
+            id: video.id,
+            title: video.title
+          }))
+        }),
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to create playlist");
@@ -77,9 +94,7 @@ export default function AdminDashboard() {
     },
   });
 
-  // Function to create an empty course with title and description only
   const createEmptyCourse = (data: any) => {
-    // Create a course without videos initially
     const courseData = {
       ...data,
       videos: [],
@@ -112,7 +127,6 @@ export default function AdminDashboard() {
     });
   };
 
-  // Initialize form
   useEffect(() => {
     form.reset({
       title: "",
@@ -197,7 +211,7 @@ export default function AdminDashboard() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Enter the URL of a YouTube playlist to import all videos.  {/* Future enhancement: Add video fetching and display here */}
+                          Enter the URL of a YouTube playlist to import all videos.
                         </FormDescription>
                       </FormItem>
                     )}
@@ -260,6 +274,21 @@ export default function AdminDashboard() {
                   </div>
                 </form>
               </Form>
+              {form.watch("videos")?.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4">Videos</h3>
+                  <div className="space-y-4">
+                    {form.watch("videos").map((video: any, index: number) => (
+                      <div key={video.id} className="flex items-center justify-between p-4 border rounded">
+                        <span>{video.title}</span>
+                        <Button type="button" variant="outline">
+                          Generate Notes
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -275,12 +304,10 @@ export default function AdminDashboard() {
                   <select
                     className="w-full p-2 border rounded-md"
                     onChange={(e) => {
-                      // Fetch course videos and load them for editing
                       if (e.target.value) {
                         fetch(`/api/playlists/${e.target.value}`)
                           .then(res => res.json())
                           .then(playlist => {
-                            // Set form values based on selected playlist
                             form.setValue('videos', playlist.videos || []);
                           })
                           .catch(console.error);
@@ -365,7 +392,6 @@ export default function AdminDashboard() {
                   <Button
                     type="button"
                     onClick={() => {
-                      // Save videos to the selected course
                       const select = document.querySelector('select') as HTMLSelectElement;
                       const courseId = select?.value;
 

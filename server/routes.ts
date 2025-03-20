@@ -51,16 +51,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map(item => item.snippet?.resourceId?.videoId)
         .filter(id => id);
 
-      // Get video details including duration
-      const videoDetailsResponse = await youtube.videos.list({
-        part: ['contentDetails', 'snippet'],
-        id: videoIds
-      });
+      // Get video details in batches of 50 (YouTube API limit)
+      const batches = [];
+      for (let i = 0; i < videoIds.length; i += 50) {
+        const batchIds = videoIds.slice(i, i + 50);
+        const videoDetailsResponse = await youtube.videos.list({
+          part: ['contentDetails', 'snippet'],
+          id: batchIds
+        });
+        if (videoDetailsResponse.data.items) {
+          batches.push(...videoDetailsResponse.data.items);
+        }
+      }
 
       // Create a map of video durations
       const durationMap = new Map();
-      if (videoDetailsResponse.data.items) {
-        videoDetailsResponse.data.items.forEach(video => {
+      batches.forEach(video => {
           if (video.id && video.contentDetails?.duration) {
             // Convert ISO 8601 duration to readable format
             const duration = video.contentDetails.duration

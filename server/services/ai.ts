@@ -1,5 +1,5 @@
 
-import { openai } from "./openai";
+import { openai } from "./openai.ts";
 
 const getFallbackNotes = (transcript: string): string => {
   // Extract topic from transcript

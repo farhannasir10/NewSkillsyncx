@@ -7,6 +7,8 @@ import XPBadge from "@/components/xp-badge";
 import { Link } from "wouter";
 import { LogOut, Plus, Rocket, Trophy, Users } from "lucide-react";
 import CareerPathCard from "@/components/career-path-card"; // Assuming this component exists
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"; // Assuming these components exist
+
 
 const HomePage = () => {
   const { user, logoutMutation } = useAuth();
@@ -66,18 +68,8 @@ const HomePage = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Career Paths Section */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Career Paths</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {careerPaths?.map((path) => (
-              <CareerPathCard key={path.id} path={path} />
-            ))}
-          </div>
-        </section>
-
         {/* Career Path Banner */}
-        <section className="mb-12 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-8">
+        <section className="mb-8 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-8">
           <div className="flex items-start justify-between">
             <div className="max-w-2xl">
               <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
@@ -89,7 +81,7 @@ const HomePage = () => {
                 Get personalized course recommendations and mentorship to achieve your career goals.
               </p>
               <Link href="/career">
-                <Button size="lg">
+                <Button size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
                   Explore Career Paths
                 </Button>
               </Link>
@@ -97,24 +89,26 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Courses Column */}
-          <div className="lg:col-span-8">
-            <h2 className="text-2xl font-semibold mb-6">Featured Courses</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {playlists?.map((playlist) => (
-                <PlaylistCard
-                  key={playlist.id}
-                  playlist={playlist}
-                  userId={user?.id || 0}
-                />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Trending Courses */}
+          <div className="col-span-2">
+            <h2 className="text-2xl font-semibold mb-4">Trending Courses</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {playlists?.slice(0, 4).map((playlist) => (
+                <Card key={playlist.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle>{playlist.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{playlist.description}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
 
           {/* Community and Leaderboard Column */}
-          <div className="lg:col-span-4 space-y-8">
+          <div className="space-y-8">
             {/* Community Posts */}
             <section>
               <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
@@ -162,6 +156,18 @@ const HomePage = () => {
             </section>
           </div>
         </div>
+
+
+        {/* Career Paths Section */}
+        <section className="mt-12">
+          <h2 className="text-3xl font-bold mb-6">Career Paths</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {careerPaths?.map((path) => (
+              <CareerPathCard key={path.id} path={path} />
+            ))}
+          </div>
+        </section>
+
       </main>
     </div>
   );

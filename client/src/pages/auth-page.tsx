@@ -29,12 +29,13 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex">
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">
+      <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-background to-muted">
+        <Card className="w-full max-w-md shadow-2xl">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Welcome to SkillSyncX
             </CardTitle>
+            <p className="text-center text-muted-foreground">Your personalized learning journey begins here</p>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
@@ -73,7 +74,11 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-                    <Button className="w-full" type="submit" disabled={loginMutation.isPending}>
+                    <Button 
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all" 
+                      type="submit" 
+                      disabled={loginMutation.isPending}
+                    >
                       {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Login
                     </Button>
